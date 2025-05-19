@@ -26,10 +26,32 @@ namespace breakout {
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<Velocity>::Bit);
 
+        constexpr float SCREEN_WIDTH = 800.0f;
+        constexpr float SCREEN_HEIGHT = 600.0f;
+
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Movement logic would go here
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            auto& pos = bagel::World::getComponent<Position>(ent);
+            auto& vel = bagel::World::getComponent<Velocity>(ent);
+
+            // Apply velocity to position
+            pos.x += vel.dx;
+            pos.y += vel.dy;
+
+            // Reflect from left/right walls
+            if (pos.x < 0 || pos.x > SCREEN_WIDTH) {
+                std::cout << "Entity " << id << " hit horizontal wall\n";
+                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH);
+                vel.dx *= -1;
+            }
+
+            // Reflect from top wall only (bottom is handled by FloorTag in CollisionSystem)
+            if (pos.y < 0) {
+                std::cout << "Entity " << id << " hit top wall\n";
+                pos.y = 0;
+                vel.dy *= -1;
             }
         }
     }
@@ -47,17 +69,21 @@ namespace breakout {
      *        Also checks optional components like BallTag and BrickHealth for special behavior.
      */
     void CollisionSystem() {
-        bagel::Mask mask;
-        mask.set(bagel::Component<Position>::Bit);
-        mask.set(bagel::Component<Collider>::Bit);
+        bagel::Mask requiredMask;
+        requiredMask.set(bagel::Component<Position>::Bit);
+        requiredMask.set(bagel::Component<Collider>::Bit);
 
-        for (id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
+        for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
             bagel::ent_type e1{id1};
-            if (!bagel::World::mask(e1).test(mask)) continue;
+            if (!bagel::World::mask(e1).test(requiredMask)) continue;
 
-            for (id_type id2 = id1 + 1; id2 <= bagel::World::maxId().id; ++id2) {
+            // We only want e1 to be the ball
+            if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
+
+            for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
+                if (id1 == id2) continue;
                 bagel::ent_type e2{id2};
-                if (!bagel::World::mask(e2).test(mask)) continue;
+                if (!bagel::World::mask(e2).test(requiredMask)) continue;
 
                 auto& p1 = bagel::World::getComponent<Position>(e1);
                 auto& c1 = bagel::World::getComponent<Collider>(e1);
@@ -66,11 +92,8 @@ namespace breakout {
 
                 if (!isColliding(p1, c1, p2, c2)) continue;
 
-                bool ball1 = bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit);
-                bool ball2 = bagel::World::mask(e2).test(bagel::Component<BallTag>::Bit);
-
-                // כדור פוגע בלבנה
-                if (ball1 && bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
+                // Ball hits a brick
+                if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
                     auto& brick = bagel::World::getComponent<BrickHealth>(e2);
                     std::cout << "Ball hit brick! Remaining hits: " << brick.hits << "\n";
                     brick.hits--;
@@ -78,24 +101,18 @@ namespace breakout {
                         bagel::World::addComponent<DestroyedTag>(e2, {});
                     }
                 }
-                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<BrickHealth>::Bit)) {
-                    auto& brick = bagel::World::getComponent<BrickHealth>(e1);
-                    brick.hits--;
-                    if (brick.hits <= 0) {
-                        bagel::World::addComponent<DestroyedTag>(e1, {});
-                    }
-                }
 
-                // כדור פוגע בפדל — שנה את כיוון הכדור
-                if (ball1 && bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
+                // Ball hits paddle → reverse vertical direction
+                else if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
                     std::cout << "Ball hit paddle! Inverting Y velocity.\n";
-
                     auto& vel = bagel::World::getComponent<Velocity>(e1);
                     vel.dy *= -1;
                 }
-                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<PaddleControl>::Bit)) {
-                    auto& vel = bagel::World::getComponent<Velocity>(e2);
-                    vel.dy *= -1;
+
+                // Ball hits floor → (later: reduce life count)
+                else if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
+                    std::cout << "Ball hit the floor!\n";
+                    bagel::World::addComponent<DestroyedTag>(e1, {});
                 }
             }
         }
@@ -109,10 +126,25 @@ namespace breakout {
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<PaddleControl>::Bit);
 
+        // Poll keyboard state
+        SDL_PumpEvents();
+        int numKeys = 0;
+        const bool* keys = SDL_GetKeyboardState(&numKeys);
+
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Paddle movement based on input would go here
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            auto& pos = bagel::World::getComponent<Position>(ent);
+            const auto& control = bagel::World::getComponent<PaddleControl>(ent);
+
+            const float speed = 5.0f;
+
+            if (keys[control.keyLeft]) {
+                pos.x -= speed;
+            }
+            if (keys[control.keyRight]) {
+                pos.x += speed;
             }
         }
     }
@@ -144,9 +176,10 @@ namespace breakout {
 
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Destruction/removal logic would go here
-            }
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            std::cout << "Destroying entity: " << id << "\n";
+            bagel::World::destroyEntity(ent);
         }
     }
 

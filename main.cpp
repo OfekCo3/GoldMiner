@@ -63,7 +63,7 @@
  int main() {
      using namespace breakout;
 
-     // יצירת ישויות
+     // Create entities
      int ballID = CreateBall();
      int paddleID = CreatePaddle(1, 2);
      int brickID = CreateBrick(2);
@@ -77,20 +77,45 @@
      std::cout << "Floor ID: " << floorID << "\n";
      std::cout << "UIManager ID: " << uiID << "\n";
 
-     // מיקום לצורך בדיקת התנגשות - נשנה את כולם לאותו מקום
+     // Position the ball to hit the wall and then the floor
      auto& ballPos = bagel::World::getComponent<Position>({ballID});
-     ballPos = {100, 100};
+     ballPos = {400, 100};// near bottom-right corner
+     auto& ballVel = bagel::World::getComponent<Velocity>({ballID});
+     ballVel = {0, 2}; // moving right
+
+     // Brick & paddle placed where the ball can hit them in early frames
      auto& brickPos = bagel::World::getComponent<Position>({brickID});
-     brickPos = {100, 100};
+     brickPos = {400, 250};
+
      auto& paddlePos = bagel::World::getComponent<Position>({paddleID});
-     paddlePos = {100, 100};
+     paddlePos = {400, 400};
+
+     auto& floorPos = bagel::World::getComponent<Position>({floorID});
+     floorPos = {400, 590}; // y=590, matches bottom edge
 
      std::cout << "\nRunning systems...\n";
 
-     // הרצת מערכת התנגשות פעמיים כדי לראות שהלבנה מתרסקת
-     CollisionSystem();
-     CollisionSystem();
+     for (int i = 0; i < 10; ++i) {
+         std::cout << "\n--- Frame " << i << " ---\n";
 
-     std::cout << "Done.\n";
+         PlayerControlSystem();
+         MovementSystem();   // 1. update position
+         CollisionSystem();  // 2. detect collisions
+         DestroySystem();    // 3. remove destroyed entities
+
+         // Check ball status
+         const auto& mask = bagel::World::mask({ballID});
+         if (mask.ctz() == -1) {
+             std::cout << "Ball entity was destroyed successfully. Exiting loop.\n";
+             break;
+         }
+
+         auto& pos = bagel::World::getComponent<Position>({ballID});
+         auto& vel = bagel::World::getComponent<Velocity>({ballID});
+         std::cout << "Ball Position: (" << pos.x << ", " << pos.y << ") ";
+         std::cout << "Velocity: (" << vel.dx << ", " << vel.dy << ")\n";
+     }
+
+     std::cout << "\nAll systems tested.\n";
      return 0;
  }
