@@ -8,7 +8,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(BAGEL
         bagel.h
-        tests.cpp
         bagel_cfg.h
         breakoutGame/breakout_game.cpp
         breakoutGame/breakout_game.h

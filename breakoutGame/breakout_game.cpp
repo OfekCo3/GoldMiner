@@ -4,13 +4,12 @@
  *
  * This file contains the definitions of all systems and entity constructors
  * used in the Breakout-style game, implemented based on the ECS model with BAGEL.
+ * All logic is placeholder only; the focus is on structure and mask-based iteration.
  */
 
 #include "breakout_game.h"
 #include "../bagel.h"
-#include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
-#include <unordered_map>
+#include "SDL3_image/SDL_image.h"
 #include <iostream>
 
 namespace breakout {
@@ -30,10 +29,7 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (bagel::World::mask(ent).test(required)) {
-                auto& pos = bagel::World::getComponent<Position>(ent);
-                const auto& vel = bagel::World::getComponent<Velocity>(ent);
-                pos.x += vel.dx;
-                pos.y += vel.dy;
+                // Movement logic would go here
             }
         }
     }
@@ -72,21 +68,10 @@ namespace breakout {
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<PaddleControl>::Bit);
 
-        SDL_PumpEvents();
-        auto keys = SDL_GetKeyboardState(nullptr);
-
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (bagel::World::mask(ent).test(required)) {
-                auto& pos = bagel::World::getComponent<Position>(ent);
-                const auto& control = bagel::World::getComponent<PaddleControl>(ent);
-
-                if (keys[control.keyLeft]) {
-                    pos.x -= 4.0f;
-                }
-                if (keys[control.keyRight]) {
-                    pos.x += 4.0f;
-                }
+                // Paddle movement based on input would go here
             }
         }
     }
@@ -119,7 +104,7 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (bagel::World::mask(ent).test(required)) {
-                bagel::World::destroyEntity(ent);
+                // Destruction/removal logic would go here
             }
         }
     }
@@ -140,93 +125,153 @@ namespace breakout {
         }
     }
 
-    /**
-     * @brief Draws all entities with Position and Sprite components onto the screen.
-     *
-     * Uses spriteID from the Sprite component to locate the subtexture to draw from the sprite sheet.
-     * Assumes the SDL_Renderer and SDL_Texture (sheet) are passed externally.
-     *
-     * @param renderer The SDL_Renderer used for drawing.
-     * @param sheet The SDL_Texture containing the sprite sheet.
-     */
-    void RenderSystem(SDL_Renderer* renderer, SDL_Texture* sheet) {
-        using namespace bagel;
-
-        static const std::unordered_map<int, SDL_FRect> SPRITE_MAP = {
-            {0, {800, 548, 87, 77}},     // Ball
-            {1, {392, 9, 161, 55}},      // Paddle
-            {2, {21, 17, 171, 59}},      // Brick Blue
-            {3, {209, 16, 171, 60}},     // Brick Blue Damaged
-            {4, {20, 169, 168, 57}},     // Brick Purple
-            {5, {208, 168, 170, 58}},    // Brick Purple Damaged
-            {6, {20, 469, 169, 59}},     // Brick Yellow
-            {7, {210, 470, 166, 63}},    // Brick Yellow Damaged
-            {8, {17, 319, 175, 57}},     // Brick Orange
-            {9, {206, 318, 175, 58}},    // Brick Orange Damaged
-            {10, {837, 643, 11, 22}},    // Laser
-        };
-
-        Mask required;
-        required.set(Component<Position>::Bit);
-        required.set(Component<Sprite>::Bit);
-
-        SDL_RenderClear(renderer);
-
-        for (id_type id = 0; id <= World::maxId().id; ++id) {
-            ent_type ent{id};
-            if (!World::mask(ent).test(required)) continue;
-
-            const auto& pos = World::getComponent<Position>(ent);
-            const auto& sprite = World::getComponent<Sprite>(ent);
-
-            auto it = SPRITE_MAP.find(sprite.spriteID);
-            if (it == SPRITE_MAP.end()) continue;
-
-            SDL_FRect dst = {
-                pos.x,
-                pos.y,
-                it->second.w,
-                it->second.h
-            };
-
-            SDL_RenderTexture(renderer, sheet, &it->second, &dst);
-        }
-
-        SDL_RenderPresent(renderer);
-    }
-
     //----------------------------------
     // Entity Creation Functions
     //----------------------------------
 
+    /**
+     * @brief Creates a new ball entity with basic motion and collision components.
+     * @return Unique entity ID
+     */
     id_type CreateBall() {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{}, Velocity{}, Sprite{}, Collider{}, BallTag{});
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a brick entity with a specified amount of health.
+     * @param health Number of hits required to break the brick
+     * @return Unique entity ID
+     */
     id_type CreateBrick(int health) {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{}, Sprite{}, Collider{}, BrickHealth{health});
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a paddle entity with assigned movement key controls.
+     * @param left Key code for left movement
+     * @param right Key code for right movement
+     * @return Unique entity ID
+     */
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{}, Sprite{}, Collider{}, PaddleControl{left, right});
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a falling power-up with a defined type and timed effect.
+     * @param type Identifier for the power-up effect
+     * @return Unique entity ID
+     */
     id_type CreatePowerUp(int type) {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{}, Velocity{}, Sprite{}, Collider{}, PowerUpType{type}, TimedEffect{}, DestroyedTag{});
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a UI manager entity to display score and life count.
+     * @return Unique entity ID
+     */
     id_type CreateUIManager() {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Score{}, LifeCount{});
         return e.entity().id;
     }
 
-} // namespace breakout
+
+    /**
+     * @brief Main game loop for the Breakout ECS-style game.
+     *
+     * Initializes entities, handles player input, updates systems,
+     * and renders all game entities with Position and Sprite components.
+     *
+     * @param ren SDL renderer for drawing.
+     * @param tex Texture sheet for all game sprites.
+     */
+    void run(SDL_Renderer* ren, SDL_Texture* tex) {
+        using namespace bagel;
+
+        // === Create initial entities ===
+        CreateUIManager();
+        CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
+        CreateBall();
+
+        for (int i = 0; i < 10; ++i)
+            CreateBrick(1 + (i % 3));  // Bricks with different durability
+
+        bool quit = false;
+        SDL_Event e;
+
+        while (!quit) {
+            Uint32 frameStart = SDL_GetTicks();
+
+            // === Input handling ===
+            SDL_PumpEvents();
+            const bool* keys = SDL_GetKeyboardState(nullptr);  // SDL3 returns bool*
+
+            while (SDL_PollEvent(&e)) {
+                if (e.type == SDL_EVENT_QUIT)
+                    quit = true;
+                else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)
+                    quit = true;
+            }
+
+            // Move paddle based on keyboard input
+            for (bagel::id_type id = 0; id <= World::maxId().id; ++id) {
+                ent_type ent{id};
+                if (World::mask(ent).test(Component<PaddleControl>::Bit) &&
+                    World::mask(ent).test(Component<Position>::Bit)) {
+
+                    auto& pos = World::getComponent<Position>(ent);
+                    const auto& control = World::getComponent<PaddleControl>(ent);
+
+                    if (keys[control.keyLeft])  pos.x -= 5.0f;
+                    if (keys[control.keyRight]) pos.x += 5.0f;
+                }
+            }
+
+            // === System logic ===
+            MovementSystem();
+            CollisionSystem();
+            PowerUpSystem();
+            DestroySystem();
+
+            World::step();  // Clears internal state after changes
+
+            // === Rendering ===
+            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+            SDL_RenderClear(ren);
+
+            for (bagel::id_type id = 0; id <= World::maxId().id; ++id) {
+                ent_type ent{id};
+                if (World::mask(ent).test(Component<Position>::Bit) &&
+                    World::mask(ent).test(Component<Sprite>::Bit)) {
+
+                    const auto& pos = World::getComponent<Position>(ent);
+
+                    SDL_FRect dst = {pos.x, pos.y, 40, 40};  // Default size
+                    SDL_FRect src = {0, 0, 87, 77};          // Placeholder sprite from sheet
+
+                    SDL_RenderTexture(ren, tex, &src, &dst);
+                }
+            }
+
+            SDL_RenderPresent(ren);
+
+            // Frame limiting
+            Uint32 frameTime = SDL_GetTicks() - frameStart;
+            if (frameTime < 16) SDL_Delay(16 - frameTime);
+        }
+    }
+
+}
+
+
+
+
+// namespace breakout

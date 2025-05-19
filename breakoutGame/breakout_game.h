@@ -11,8 +11,7 @@
 #define BREAKOUT_GAME_H
 
 #include <cstdint>
-#include <SDL3/SDL.h>
-#include <unordered_map>
+#include "SDL3_image/SDL_image.h"
 
 
 
@@ -117,14 +116,6 @@ namespace breakout {
      */
     void UISystem();
 
-    /**
-     * @brief Renders all drawable entities to the screen.
-     *
-     * @param renderer SDL renderer to draw with.
-     * @param sheet Texture containing sprite sheet.
-     */
-    void RenderSystem(SDL_Renderer* renderer, SDL_Texture* sheet);
-
     //----------------------------------
     // Entity creation functions
     //----------------------------------
@@ -162,6 +153,9 @@ namespace breakout {
      * @return The unique ID of the created entity.
      */
      id_type CreateUIManager();
+
+     void run(SDL_Renderer* ren, SDL_Texture* tex);
+
 
 } // namespace breakout
 

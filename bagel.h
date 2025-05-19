@@ -14,9 +14,9 @@ namespace bagel
 		bool	CallbackOnDestroy = true;
 		bool	DynamicResize = false;
 		int		IdBagSize = 5;
-		int		InitialEntities = 10;
+		int		InitialEntities = 100;
 		int		InitialPackedSize = 5;
-		int		MaxComponents = 15;
+		int		MaxComponents = 100;
 	};
 
 	template <class T> struct Storage;
