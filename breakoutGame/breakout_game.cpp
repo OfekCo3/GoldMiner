@@ -22,14 +22,37 @@ namespace breakout {
      * @brief Updates positions of entities that have both Position and Velocity components.
      */
     void MovementSystem() {
+        // Update position for entities with both Position and Velocity
         bagel::Mask required;
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<Velocity>::Bit);
 
+        constexpr float SCREEN_WIDTH = 800.0f;
+        constexpr float SCREEN_HEIGHT = 600.0f;
+
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Movement logic would go here
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            auto& pos = bagel::World::getComponent<Position>(ent);
+            auto& vel = bagel::World::getComponent<Velocity>(ent);
+
+            // Apply velocity to position
+            pos.x += vel.dx;
+            pos.y += vel.dy;
+
+            // Reflect from left/right walls
+            if (pos.x < 0 || pos.x > SCREEN_WIDTH) {
+                std::cout << "Entity " << id << " hit horizontal wall\n";
+                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH);
+                vel.dx *= -1;
+            }
+
+            // Reflect from top wall only (bottom is handled by FloorTag in CollisionSystem)
+            if (pos.y < 0) {
+                std::cout << "Entity " << id << " hit top wall\n";
+                pos.y = 0;
+                vel.dy *= -1;
             }
         }
     }
@@ -80,14 +103,14 @@ namespace breakout {
                     }
                 }
 
-                    // Ball hits paddle → reverse vertical direction
+                // Ball hits paddle → reverse vertical direction
                 else if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
                     std::cout << "Ball hit paddle! Inverting Y velocity.\n";
                     auto& vel = bagel::World::getComponent<Velocity>(e1);
                     vel.dy *= -1;
                 }
 
-                    // Ball hits floor → (later: reduce life count)
+                // Ball hits floor → (later: reduce life count)
                 else if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
                     std::cout << "Ball hit the floor!\n";
                     bagel::World::addComponent<DestroyedTag>(e1, {});

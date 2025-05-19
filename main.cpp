@@ -63,7 +63,7 @@
  int main() {
      using namespace breakout;
 
-     // יצירת ישויות
+     // Create all needed entities
      int ballID = CreateBall();
      int paddleID = CreatePaddle(1, 2);
      int brickID = CreateBrick(2);
@@ -77,19 +77,34 @@
      std::cout << "Floor ID: " << floorID << "\n";
      std::cout << "UIManager ID: " << uiID << "\n";
 
-     // מיקום לצורך בדיקת התנגשות - נשנה את כולם לאותו מקום
+     // Position all entities near each other for collision testing
      auto& ballPos = bagel::World::getComponent<Position>({ballID});
-     ballPos = {100, 100};
+     ballPos = {790, 10}; // near right wall
+     auto& ballVel = bagel::World::getComponent<Velocity>({ballID});
+     ballVel = {5, -3}; // fast toward wall and up
+
      auto& brickPos = bagel::World::getComponent<Position>({brickID});
      brickPos = {100, 100};
+
      auto& paddlePos = bagel::World::getComponent<Position>({paddleID});
      paddlePos = {100, 100};
 
+     auto& floorPos = bagel::World::getComponent<Position>({floorID});
+     floorPos = {400, 590};
+
      std::cout << "\nRunning systems...\n";
 
-     // הרצת מערכת התנגשות פעמיים כדי לראות שהלבנה מתרסקת
-     CollisionSystem();
-     CollisionSystem();
+     // Simulate a few frames
+     for (int i = 0; i < 5; ++i) {
+         std::cout << "Frame " << i << ":\n";
+         MovementSystem();   // Apply velocity
+         CollisionSystem();  // Handle hits (brick/paddle/floor)
+
+         auto& pos = bagel::World::getComponent<Position>({ballID});
+         auto& vel = bagel::World::getComponent<Velocity>({ballID});
+         std::cout << "Ball Position: (" << pos.x << ", " << pos.y << ") ";
+         std::cout << "Velocity: (" << vel.dx << ", " << vel.dy << ")\n";
+     }
 
      std::cout << "Done.\n";
      return 0;
