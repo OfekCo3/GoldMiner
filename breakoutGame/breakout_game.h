@@ -82,6 +82,8 @@ namespace breakout {
     /** @brief Marks an entity to be removed from the game */
     struct DestroyedTag {};
 
+    /** @brief Tag component to mark the floor */
+    struct FloorTag {};
     //----------------------------------
     // Systems (declarations only)
     //----------------------------------
@@ -156,6 +158,11 @@ namespace breakout {
 
      void run(SDL_Renderer* ren, SDL_Texture* tex);
 
+    /**
+    * @brief Creates a floor entity that detects when the ball falls below.
+    * @return The unique ID of the created entity.
+    */
+    id_type CreateFloor();
 
 } // namespace breakout
 

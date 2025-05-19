@@ -1,0 +1,177 @@
+[
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\aabb.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\aabb.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\aabb.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\arena_allocator.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\arena_allocator.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\arena_allocator.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\array.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\array.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\array.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\bitset.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\bitset.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\bitset.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\body.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\body.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\body.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\broad_phase.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\broad_phase.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\broad_phase.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\constraint_graph.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\constraint_graph.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\constraint_graph.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\contact.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\contact.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\contact.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\contact_solver.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\contact_solver.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\contact_solver.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\core.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\core.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\core.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\distance.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\distance.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\distance.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\distance_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\distance_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\distance_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\dynamic_tree.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\dynamic_tree.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\dynamic_tree.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\geometry.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\geometry.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\geometry.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\hull.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\hull.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\hull.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\id_pool.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\id_pool.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\id_pool.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\island.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\island.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\island.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\manifold.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\manifold.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\manifold.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\math_functions.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\math_functions.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\math_functions.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\motor_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\motor_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\motor_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\mouse_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\mouse_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\mouse_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\mover.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\mover.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\mover.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\prismatic_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\prismatic_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\prismatic_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\revolute_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\revolute_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\revolute_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\sensor.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\sensor.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\sensor.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\shape.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\shape.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\shape.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\solver.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\solver.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\solver.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\solver_set.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\solver_set.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\solver_set.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\table.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\table.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\table.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\timer.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\timer.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\timer.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\types.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\types.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\types.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\weld_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\weld_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\weld_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\wheel_joint.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\wheel_joint.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\wheel_joint.c"
+},
+{
+  "directory": "C:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.2\\bin\\mingw\\bin\\gcc.exe -DBOX2D_ENABLE_SIMD -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src/../include -IC:/Users/User/Desktop/BreakoutGameECSNew/cmake-build-debug/lib/box2d/src -IC:/Users/User/Desktop/BreakoutGameECSNew/lib/box2d/src -g -fvisibility=hidden -fdiagnostics-color=always -ffp-contract=off -std=gnu17 -Werror -o lib\\box2d\\src\\CMakeFiles\\box2d.dir\\world.c.obj -c C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\world.c",
+  "file": "C:\\Users\\User\\Desktop\\BreakoutGameECSNew\\lib\\box2d\\src\\world.c"
+}
+]

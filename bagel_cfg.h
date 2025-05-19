@@ -19,3 +19,5 @@ BAGEL_STORAGE(breakout::Score, SparseStorage)
 BAGEL_STORAGE(breakout::LifeCount, SparseStorage)
 BAGEL_STORAGE(breakout::BallTag, TaggedStorage)
 BAGEL_STORAGE(breakout::DestroyedTag, TaggedStorage)
+BAGEL_STORAGE(breakout::FloorTag, TaggedStorage)
+
