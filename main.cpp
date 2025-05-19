@@ -1,9 +1,7 @@
  #include "breakoutGame/breakout_game.h"
  #include "bagel.h"
- #include "SDL3/SDL.h"
  #include "SDL3_image/SDL_image.h"
-
-
+ #include "SDL3/SDL.h"
  #include <iostream>
  /**
   * @brief Initializes SDL, creates a window and renderer, and loads the texture sheet.
@@ -62,42 +60,42 @@
 //}
 
 
+
  /*int main() {
-     using namespace breakout;
+     // Create entities
+     // Position the ball to hit the wall and then the floor
+     ballPos = {400, 100};// near bottom-right corner
+     auto& ballVel = bagel::World::getComponent<Velocity>({ballID});
+     ballVel = {0, 2}; // moving right
 
-     // יצירת ישויות
-     int ballID = CreateBall();
-     int paddleID = CreatePaddle(1, 2);
-     int brickID = CreateBrick(2);
-     int floorID = CreateFloor();
-     int uiID = CreateUIManager();
+     // Brick & paddle placed where the ball can hit them in early frames
+     brickPos = {400, 250};
 
-     std::cout << "Entities created:\n";
-     std::cout << "Ball ID: " << ballID << "\n";
-     std::cout << "Paddle ID: " << paddleID << "\n";
-     std::cout << "Brick ID: " << brickID << "\n";
-     std::cout << "Floor ID: " << floorID << "\n";
-     std::cout << "UIManager ID: " << uiID << "\n";
+     paddlePos = {400, 400};
 
-     // מיקום לצורך בדיקת התנגשות - נשנה את כולם לאותו מקום
-     auto& ballPos = bagel::World::getComponent<Position>({ballID});
-     ballPos = {100, 100};
-     auto& brickPos = bagel::World::getComponent<Position>({brickID});
-     brickPos = {100, 100};
-     auto& paddlePos = bagel::World::getComponent<Position>({paddleID});
-     paddlePos = {100, 100};
+     auto& floorPos = bagel::World::getComponent<Position>({floorID});
+     floorPos = {400, 590}; // y=590, matches bottom edge
+     for (int i = 0; i < 10; ++i) {
+         std::cout << "\n--- Frame " << i << " ---\n";
 
-     std::cout << "\nRunning systems...\n";
+         PlayerControlSystem();
+         MovementSystem();   // 1. update position
+         CollisionSystem();  // 2. detect collisions
+         DestroySystem();    // 3. remove destroyed entities
+         // Check ball status
+         const auto& mask = bagel::World::mask({ballID});
+         if (mask.ctz() == -1) {
+             std::cout << "Ball entity was destroyed successfully. Exiting loop.\n";
+             break;
+         }
 
-     // הרצת מערכת התנגשות פעמיים כדי לראות שהלבנה מתרסקת
-     CollisionSystem();
-     CollisionSystem();
+         auto& pos = bagel::World::getComponent<Position>({ballID});
+         auto& vel = bagel::World::getComponent<Velocity>({ballID});
+         std::cout << "Ball Position: (" << pos.x << ", " << pos.y << ") ";
+         std::cout << "Velocity: (" << vel.dx << ", " << vel.dy << ")\n";
+     }
 
-
-
-
-     std::cout << "Done.\n";
-     return 0;
+     std::cout << "\nAll systems tested.\n";
  }*/
 
 int main() {
