@@ -47,56 +47,54 @@ namespace breakout {
      *        Also checks optional components like BallTag and BrickHealth for special behavior.
      */
     void CollisionSystem() {
-        using namespace bagel;
+        bagel::Mask mask;
+        mask.set(bagel::Component<Position>::Bit);
+        mask.set(bagel::Component<Collider>::Bit);
 
-        Mask mask;
-        mask.set(Component<Position>::Bit);
-        mask.set(Component<Collider>::Bit);
+        for (id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
+            bagel::ent_type e1{id1};
+            if (!bagel::World::mask(e1).test(mask)) continue;
 
-        for (id_type id1 = 0; id1 <= World::maxId().id; ++id1) {
-            ent_type e1{id1};
-            if (!World::mask(e1).test(mask)) continue;
+            for (id_type id2 = id1 + 1; id2 <= bagel::World::maxId().id; ++id2) {
+                bagel::ent_type e2{id2};
+                if (!bagel::World::mask(e2).test(mask)) continue;
 
-            for (id_type id2 = id1 + 1; id2 <= World::maxId().id; ++id2) {
-                ent_type e2{id2};
-                if (!World::mask(e2).test(mask)) continue;
-
-                auto& p1 = World::getComponent<Position>(e1);
-                auto& c1 = World::getComponent<Collider>(e1);
-                auto& p2 = World::getComponent<Position>(e2);
-                auto& c2 = World::getComponent<Collider>(e2);
+                auto& p1 = bagel::World::getComponent<Position>(e1);
+                auto& c1 = bagel::World::getComponent<Collider>(e1);
+                auto& p2 = bagel::World::getComponent<Position>(e2);
+                auto& c2 = bagel::World::getComponent<Collider>(e2);
 
                 if (!isColliding(p1, c1, p2, c2)) continue;
 
-                bool ball1 = World::mask(e1).test(Component<BallTag>::Bit);
-                bool ball2 = World::mask(e2).test(Component<BallTag>::Bit);
+                bool ball1 = bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit);
+                bool ball2 = bagel::World::mask(e2).test(bagel::Component<BallTag>::Bit);
 
                 // כדור פוגע בלבנה
-                if (ball1 && World::mask(e2).test(Component<BrickHealth>::Bit)) {
-                    auto& brick = World::getComponent<BrickHealth>(e2);
+                if (ball1 && bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e2);
                     std::cout << "Ball hit brick! Remaining hits: " << brick.hits << "\n";
                     brick.hits--;
                     if (brick.hits <= 0) {
-                        World::addComponent<DestroyedTag>(e2, {});
+                        bagel::World::addComponent<DestroyedTag>(e2, {});
                     }
                 }
-                else if (ball2 && World::mask(e1).test(Component<BrickHealth>::Bit)) {
-                    auto& brick = World::getComponent<BrickHealth>(e1);
+                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<BrickHealth>::Bit)) {
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e1);
                     brick.hits--;
                     if (brick.hits <= 0) {
-                        World::addComponent<DestroyedTag>(e1, {});
+                        bagel::World::addComponent<DestroyedTag>(e1, {});
                     }
                 }
 
                 // כדור פוגע בפדל — שנה את כיוון הכדור
-                if (ball1 && World::mask(e2).test(Component<PaddleControl>::Bit)) {
+                if (ball1 && bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
                     std::cout << "Ball hit paddle! Inverting Y velocity.\n";
 
-                    auto& vel = World::getComponent<Velocity>(e1);
+                    auto& vel = bagel::World::getComponent<Velocity>(e1);
                     vel.dy *= -1;
                 }
-                else if (ball2 && World::mask(e1).test(Component<PaddleControl>::Bit)) {
-                    auto& vel = World::getComponent<Velocity>(e2);
+                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<PaddleControl>::Bit)) {
+                    auto& vel = bagel::World::getComponent<Velocity>(e2);
                     vel.dy *= -1;
                 }
             }
