@@ -34,28 +34,69 @@ namespace breakout {
         }
     }
 
+    bool isColliding(const Position& a, const Collider& ca, const Position& b, const Collider& cb) {
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+        float distSq = dx * dx + dy * dy;
+        float radiusSum = ca.radius + cb.radius;
+        return distSq <= radiusSum * radiusSum;
+    }
+
     /**
      * @brief Detects and handles collisions between entities that have Position and Collider components.
      *        Also checks optional components like BallTag and BrickHealth for special behavior.
      */
     void CollisionSystem() {
-        bagel::Mask required;
-        required.set(bagel::Component<Position>::Bit);
-        required.set(bagel::Component<Collider>::Bit);
+        bagel::Mask mask;
+        mask.set(bagel::Component<Position>::Bit);
+        mask.set(bagel::Component<Collider>::Bit);
 
-        for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
+        for (id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
             bagel::ent_type e1{id1};
-            if (!bagel::World::mask(e1).test(required)) continue;
+            if (!bagel::World::mask(e1).test(mask)) continue;
 
-            for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
-                if (id1 == id2) continue;
+            for (id_type id2 = id1 + 1; id2 <= bagel::World::maxId().id; ++id2) {
                 bagel::ent_type e2{id2};
-                if (!bagel::World::mask(e2).test(required)) continue;
+                if (!bagel::World::mask(e2).test(mask)) continue;
 
-                // Optional checks
-                bool isBall = bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit);
-                bool hasHealth = bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit);
-                (void)isBall; (void)hasHealth;
+                auto& p1 = bagel::World::getComponent<Position>(e1);
+                auto& c1 = bagel::World::getComponent<Collider>(e1);
+                auto& p2 = bagel::World::getComponent<Position>(e2);
+                auto& c2 = bagel::World::getComponent<Collider>(e2);
+
+                if (!isColliding(p1, c1, p2, c2)) continue;
+
+                bool ball1 = bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit);
+                bool ball2 = bagel::World::mask(e2).test(bagel::Component<BallTag>::Bit);
+
+                // כדור פוגע בלבנה
+                if (ball1 && bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                    std::cout << "Ball hit brick! Remaining hits: " << brick.hits << "\n";
+                    brick.hits--;
+                    if (brick.hits <= 0) {
+                        bagel::World::addComponent<DestroyedTag>(e2, {});
+                    }
+                }
+                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<BrickHealth>::Bit)) {
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e1);
+                    brick.hits--;
+                    if (brick.hits <= 0) {
+                        bagel::World::addComponent<DestroyedTag>(e1, {});
+                    }
+                }
+
+                // כדור פוגע בפדל — שנה את כיוון הכדור
+                if (ball1 && bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
+                    std::cout << "Ball hit paddle! Inverting Y velocity.\n";
+
+                    auto& vel = bagel::World::getComponent<Velocity>(e1);
+                    vel.dy *= -1;
+                }
+                else if (ball2 && bagel::World::mask(e1).test(bagel::Component<PaddleControl>::Bit)) {
+                    auto& vel = bagel::World::getComponent<Velocity>(e2);
+                    vel.dy *= -1;
+                }
             }
         }
     }
@@ -183,6 +224,11 @@ namespace breakout {
         return e.entity().id;
     }
 
+    id_type CreateFloor() {
+        bagel::Entity e = bagel::Entity::create();
+        e.addAll(Position{400.0f, 590.0f}, Collider{1000}, FloorTag{});
+        return e.entity().id;
+    }
 
     /**
      * @brief Main game loop for the Breakout ECS-style game.
@@ -268,6 +314,7 @@ namespace breakout {
             if (frameTime < 16) SDL_Delay(16 - frameTime);
         }
     }
+
 
 }
 
