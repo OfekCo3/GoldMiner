@@ -1,7 +1,9 @@
  #include "breakoutGame/breakout_game.h"
  #include "bagel.h"
- #include "SDL3_image/SDL_image.h"
  #include "SDL3/SDL.h"
+ #include "SDL3_image/SDL_image.h"
+
+
  #include <iostream>
  /**
   * @brief Initializes SDL, creates a window and renderer, and loads the texture sheet.
@@ -60,7 +62,7 @@
 //}
 
 
- int main() {
+ /*int main() {
      using namespace breakout;
 
      // יצירת ישויות
@@ -91,6 +93,48 @@
      CollisionSystem();
      CollisionSystem();
 
+
+
+
      std::cout << "Done.\n";
+     return 0;
+ }*/
+
+int main() {
+     SDL_Window* window = nullptr;
+     SDL_Renderer* renderer = nullptr;
+     SDL_Texture* sheet = nullptr;
+
+     if (!init(window, renderer, sheet)) return -1;
+
+     // ✅ בדיקה: יצירת לבנים עם צבעים שונים
+     breakout::CreateBrick(2, breakout::SpriteID::BRICK_BLUE,   100.0f, 100.0f);
+     breakout::CreateBrick(1, breakout::SpriteID::BRICK_PURPLE, 300.0f, 150.0f);
+     breakout::CreateBrick(3, breakout::SpriteID::BRICK_YELLOW, 500.0f, 200.0f);
+
+     // 🎮 לולאת רינדור
+     bool quit = false;
+     SDL_Event e;
+
+     while (!quit) {
+         SDL_PumpEvents();
+
+         while (SDL_PollEvent(&e)) {
+             if (e.type == SDL_EVENT_QUIT ||
+                 (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)) {
+                 quit = true;
+                 }
+         }
+
+         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+         SDL_RenderClear(renderer);
+
+         breakout::RenderSystem(renderer, sheet);  // ציור לפי SpriteID
+
+         SDL_RenderPresent(renderer);
+         SDL_Delay(16); // ~60 FPS
+     }
+
+     cleanUp(window, renderer, sheet);
      return 0;
  }

@@ -11,6 +11,17 @@
 #include "../bagel.h"
 #include "SDL3_image/SDL_image.h"
 #include <iostream>
+#include <unordered_map>
+
+namespace std {
+    template <>
+    struct hash<breakout::SpriteID> {
+        size_t operator()(const breakout::SpriteID& s) const {
+            return hash<int>()(static_cast<int>(s));
+        }
+    };
+}
+
 
 namespace breakout {
 
@@ -180,14 +191,16 @@ namespace breakout {
         return e.entity().id;
     }
 
-    /**
-     * @brief Creates a brick entity with a specified amount of health.
-     * @param health Number of hits required to break the brick
-     * @return Unique entity ID
-     */
-    id_type CreateBrick(int health) {
+    id_type CreateBrick(int health, SpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
-        e.addAll(Position{}, Sprite{}, Collider{}, BrickHealth{health});
+
+        e.addAll(
+            Position{x, y},
+            Sprite{color},
+            Collider{10},        //fix r
+            BrickHealth{health}
+        );
+
         return e.entity().id;
     }
 
@@ -239,7 +252,7 @@ namespace breakout {
      * @param ren SDL renderer for drawing.
      * @param tex Texture sheet for all game sprites.
      */
-    void run(SDL_Renderer* ren, SDL_Texture* tex) {
+    /*void run(SDL_Renderer* ren, SDL_Texture* tex) {
         using namespace bagel;
 
         // === Create initial entities ===
@@ -313,7 +326,50 @@ namespace breakout {
             Uint32 frameTime = SDL_GetTicks() - frameStart;
             if (frameTime < 16) SDL_Delay(16 - frameTime);
         }
+    }*/
+
+
+
+    static const std::unordered_map<SpriteID, SDL_FRect> SPRITE_ATLAS = {
+        {SpriteID::BALL,            {800, 548, 87, 77}},
+        {SpriteID::PADDLE,          {392, 9, 161, 55}},
+        {SpriteID::BRICK_BLUE,      {21, 17, 171, 59}},
+        {SpriteID::BRICK_BLUE_DMG,  {209, 16, 171, 60}},
+        {SpriteID::BRICK_PURPLE,    {20, 169, 168, 57}},
+        {SpriteID::BRICK_PURPLE_DMG,{208, 168, 170, 58}},
+        {SpriteID::BRICK_YELLOW,    {20, 469, 169, 59}},
+        {SpriteID::BRICK_YELLOW_DMG,{210, 470, 166, 63}},
+        {SpriteID::BRICK_ORANGE,    {17, 319, 175, 57}},
+        {SpriteID::BRICK_ORANGE_DMG,{206, 318, 175, 58}},
+        {SpriteID::LASER,           {837, 643, 11, 22}}
+    };
+
+
+    void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex) {
+        using namespace bagel;
+
+        Mask required;
+        required.set(Component<Position>::Bit);
+        required.set(Component<Sprite>::Bit);
+
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type ent{id};
+            if (World::mask(ent).test(required)) {
+                const auto& pos = World::getComponent<Position>(ent);
+                const auto& sprite = World::getComponent<Sprite>(ent);
+
+                SDL_FRect dst = {pos.x, pos.y, 40, 40};  // default
+                auto it = SPRITE_ATLAS.find(sprite.spriteID);
+                if (it != SPRITE_ATLAS.end()) {
+                    const SDL_FRect& src = it->second;
+                    dst.w = src.w;
+                    dst.h = src.h;
+                    SDL_RenderTexture(ren, tex, &src, &dst);
+                }
+            }
+        }
     }
+
 
 
 }
