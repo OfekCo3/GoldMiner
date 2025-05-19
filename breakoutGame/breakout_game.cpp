@@ -22,7 +22,6 @@ namespace breakout {
      * @brief Updates positions of entities that have both Position and Velocity components.
      */
     void MovementSystem() {
-        // Update position for entities with both Position and Velocity
         bagel::Mask required;
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<Velocity>::Bit);
@@ -127,10 +126,25 @@ namespace breakout {
         required.set(bagel::Component<Position>::Bit);
         required.set(bagel::Component<PaddleControl>::Bit);
 
+        // Poll keyboard state
+        SDL_PumpEvents();
+        int numKeys = 0;
+        const bool* keys = SDL_GetKeyboardState(&numKeys);
+
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Paddle movement based on input would go here
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            auto& pos = bagel::World::getComponent<Position>(ent);
+            const auto& control = bagel::World::getComponent<PaddleControl>(ent);
+
+            const float speed = 5.0f;
+
+            if (keys[control.keyLeft]) {
+                pos.x -= speed;
+            }
+            if (keys[control.keyRight]) {
+                pos.x += speed;
             }
         }
     }
@@ -162,9 +176,10 @@ namespace breakout {
 
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                // Destruction/removal logic would go here
-            }
+            if (!bagel::World::mask(ent).test(required)) continue;
+
+            std::cout << "Destroying entity: " << id << "\n";
+            bagel::World::destroyEntity(ent);
         }
     }
 

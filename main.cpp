@@ -63,7 +63,7 @@
  int main() {
      using namespace breakout;
 
-     // Create all needed entities
+     // Create entities
      int ballID = CreateBall();
      int paddleID = CreatePaddle(1, 2);
      int brickID = CreateBrick(2);
@@ -77,28 +77,38 @@
      std::cout << "Floor ID: " << floorID << "\n";
      std::cout << "UIManager ID: " << uiID << "\n";
 
-     // Position all entities near each other for collision testing
+     // Position the ball to hit the wall and then the floor
      auto& ballPos = bagel::World::getComponent<Position>({ballID});
-     ballPos = {790, 10}; // near right wall
+     ballPos = {400, 100};// near bottom-right corner
      auto& ballVel = bagel::World::getComponent<Velocity>({ballID});
-     ballVel = {5, -3}; // fast toward wall and up
+     ballVel = {0, 2}; // moving right
 
+     // Brick & paddle placed where the ball can hit them in early frames
      auto& brickPos = bagel::World::getComponent<Position>({brickID});
-     brickPos = {100, 100};
+     brickPos = {400, 250};
 
      auto& paddlePos = bagel::World::getComponent<Position>({paddleID});
-     paddlePos = {100, 100};
+     paddlePos = {400, 400};
 
      auto& floorPos = bagel::World::getComponent<Position>({floorID});
-     floorPos = {400, 590};
+     floorPos = {400, 590}; // y=590, matches bottom edge
 
      std::cout << "\nRunning systems...\n";
 
-     // Simulate a few frames
-     for (int i = 0; i < 5; ++i) {
-         std::cout << "Frame " << i << ":\n";
-         MovementSystem();   // Apply velocity
-         CollisionSystem();  // Handle hits (brick/paddle/floor)
+     for (int i = 0; i < 10; ++i) {
+         std::cout << "\n--- Frame " << i << " ---\n";
+
+         PlayerControlSystem();
+         MovementSystem();   // 1. update position
+         CollisionSystem();  // 2. detect collisions
+         DestroySystem();    // 3. remove destroyed entities
+
+         // Check ball status
+         const auto& mask = bagel::World::mask({ballID});
+         if (mask.ctz() == -1) {
+             std::cout << "Ball entity was destroyed successfully. Exiting loop.\n";
+             break;
+         }
 
          auto& pos = bagel::World::getComponent<Position>({ballID});
          auto& vel = bagel::World::getComponent<Velocity>({ballID});
@@ -106,6 +116,6 @@
          std::cout << "Velocity: (" << vel.dx << ", " << vel.dy << ")\n";
      }
 
-     std::cout << "Done.\n";
+     std::cout << "\nAll systems tested.\n";
      return 0;
  }
