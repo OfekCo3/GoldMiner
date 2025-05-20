@@ -21,7 +21,7 @@ namespace breakout {
     using id_type = int;
 
     /** @brief Enum representing all possible sprite types in the game. */
-    enum class SpriteID {
+    enum class eSpriteID {
         BALL = 0,
         PADDLE = 1,
         BRICK_BLUE = 2,
@@ -33,9 +33,16 @@ namespace breakout {
         BRICK_ORANGE = 8,
         BRICK_ORANGE_DMG = 9,
         LASER = 10,
-        STAR = 11
-
+        STAR = 11,
+        HEART = 12,
     };
+
+    enum class ePowerUpType {
+        NONE = 0,
+        SHOTING_LASER = 1,
+        WIDE_PADDLE = 2,
+    };
+
 
     //----------------------------------
     // Components
@@ -53,9 +60,9 @@ namespace breakout {
         float dy = 0.0f; ///< Vertical speed
     };
 
-    /** @brief Graphical representation of the entity. Uses sprite ID from SpriteID enum. */
+    /** @brief Graphical representation of the entity. Uses sprite ID from eSpriteID enum. */
     struct Sprite {
-        SpriteID spriteID = SpriteID::BALL;  ///< Which sprite to use when rendering
+        eSpriteID spriteID = eSpriteID::BALL;  ///< Which sprite to use when rendering
     };
 
 
@@ -81,7 +88,7 @@ namespace breakout {
 
     /** @brief Type of power-up available or collected */
     struct PowerUpType {
-        int type = 0; ///< 0 = none, 1 = wide paddle, 2 = multi-ball, etc.
+        ePowerUpType powerUp= ePowerUpType::NONE;
     };
 
     /** @brief Temporary effect applied to the entity, with duration */
@@ -109,8 +116,12 @@ namespace breakout {
         float timer = 0.0f; //seconds
     };
 
-    /** @brief Tag for falling star power-up */
+    /** @brief Tag for star power-up */
     struct StarPowerTag {};
+
+    /** @brief Tag for heart power-up */
+    struct HeartPowerTag {};
+
 
     /** @brief Tag to identify laser entities */
     struct LaserTag {};
@@ -179,12 +190,12 @@ namespace breakout {
     /**
      * @brief Creates a brick entity with specific health, sprite color, and position.
      * @param health Number of hits until the brick breaks.
-     * @param color SpriteID enum value to determine brick color.
+     * @param color eSpriteID enum value to determine brick color.
      * @param x Horizontal position of the brick.
      * @param y Vertical position of the brick.
      * @return The unique ID of the created entity.
      */
-    id_type CreateBrick(int health, SpriteID color, float x, float y);
+    id_type CreateBrick(int health, eSpriteID color, float x, float y);
 
 
     /**
@@ -227,6 +238,8 @@ namespace breakout {
     void CreateBrickGrid(int rows, int cols, int health);
 
     id_type CreateStar(float x, float y);
+
+    id_type CreateHeart(float x, float y);
 
     id_type CreateLaser(float x, float y);
 
