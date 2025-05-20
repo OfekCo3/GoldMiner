@@ -16,8 +16,8 @@
 
 namespace std {
     template <>
-    struct hash<breakout::SpriteID> {
-        size_t operator()(const breakout::SpriteID& s) const {
+    struct hash<breakout::eSpriteID> {
+        size_t operator()(const breakout::eSpriteID& s) const {
             return hash<int>()(static_cast<int>(s));
         }
     };
@@ -140,7 +140,7 @@ void CollisionSystem() {
 
                 if (brick.hits <= 0) {
                     auto& sprite = bagel::World::getComponent<Sprite>(e2);
-                    sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
+                    sprite.spriteID = static_cast<eSpriteID>(static_cast<int>(sprite.spriteID) + 1);
 
                     if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
                         bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
@@ -185,7 +185,7 @@ void CollisionSystem() {
 
                 if (brick.hits <= 0) {
                     auto& sprite = bagel::World::getComponent<Sprite>(e2);
-                    sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
+                    sprite.spriteID = static_cast<eSpriteID>(static_cast<int>(sprite.spriteID) + 1);
 
                     if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
                         bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
@@ -219,7 +219,7 @@ void CollisionSystem() {
                 for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
                     bagel::ent_type paddle{pid};
                     if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
-                        bagel::World::addComponent(paddle, breakout::PowerUpType{1});
+                        bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
                         bagel::World::addComponent(paddle, breakout::TimedEffect{3.0f});
                         break;
                     }
@@ -315,7 +315,7 @@ void PowerUpSystem(float deltaTime) {
         }
 
         // Handle laser power-up
-        if (power.type == 1) {
+        if (power.powerUp == ePowerUpType::SHOTING_LASER) {
             laserCooldown -= deltaTime;
             if (laserCooldown <= 0.0f) {
                 const auto& pos = World::getComponent<Position>(ent);
@@ -394,7 +394,7 @@ void PowerUpSystem(float deltaTime) {
 
         Position pos{400.0f, 450.0f};
         Velocity vel{1.2f, 1.5f};
-        Sprite sprite{SpriteID::BALL};
+        Sprite sprite{eSpriteID::BALL};
         float spriteW = 87.0f * 0.4f;
         float spriteH = 77.0f * 0.4f;
         Collider collider{spriteW, spriteH};
@@ -410,7 +410,7 @@ void PowerUpSystem(float deltaTime) {
      *
      * @return Unique entity ID
      */
-    id_type CreateBrick(int health, SpriteID color, float x, float y) {
+    id_type CreateBrick(int health, eSpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
 
         e.addAll(
@@ -436,7 +436,7 @@ void PowerUpSystem(float deltaTime) {
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
         Position pos{320.0f, 560.0f};
-        Sprite sprite{SpriteID::PADDLE};
+        Sprite sprite{eSpriteID::PADDLE};
         Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
         PaddleControl control{left, right};
         e.addAll(pos, sprite, collider, control);
@@ -449,7 +449,7 @@ void PowerUpSystem(float deltaTime) {
      * @param type Identifier for the power-up effect
      * @return Unique entity ID
      */
-    id_type CreatePowerUp(int type) {
+    id_type CreatePowerUp(ePowerUpType type) {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{}, Velocity{}, Sprite{}, Collider{}, PowerUpType{type}, TimedEffect{}, DestroyedTag{});
         return e.entity().id;
@@ -559,22 +559,20 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
     }
 }
 
-
-
-    static const std::unordered_map<SpriteID, SDL_FRect> SPRITE_ATLAS = {
-        {SpriteID::BALL,            {800, 548, 87, 77}},
-        {SpriteID::PADDLE,          {392, 9, 161, 55}},
-        {SpriteID::BRICK_BLUE,      {21, 17, 171, 59}},
-        {SpriteID::BRICK_BLUE_DMG,  {209, 16, 171, 60}},
-        {SpriteID::BRICK_PURPLE,    {20, 169, 168, 57}},
-        {SpriteID::BRICK_PURPLE_DMG,{208, 168, 170, 58}},
-        {SpriteID::BRICK_YELLOW,    {20, 469, 169, 59}},
-        {SpriteID::BRICK_YELLOW_DMG,{210, 470, 166, 63}},
-        {SpriteID::BRICK_ORANGE,    {17, 319, 175, 57}},
-        {SpriteID::BRICK_ORANGE_DMG,{206, 318, 175, 58}},
-        {SpriteID::LASER,           {837, 643, 11, 22}},
-           {SpriteID::STAR,              {798, 372, 84, 73}}
-
+    static const std::unordered_map<eSpriteID, SDL_FRect> SPRITE_ATLAS = {
+        {eSpriteID::BALL, {800, 548, 87, 77}},
+        {eSpriteID::PADDLE, {392, 9, 161, 55}},
+        {eSpriteID::BRICK_BLUE, {21, 17, 171, 59}},
+        {eSpriteID::BRICK_BLUE_DMG, {209, 16, 171, 60}},
+        {eSpriteID::BRICK_PURPLE, {20, 169, 168, 57}},
+        {eSpriteID::BRICK_PURPLE_DMG, {208, 168, 170, 58}},
+        {eSpriteID::BRICK_YELLOW, {20, 469, 169, 59}},
+        {eSpriteID::BRICK_YELLOW_DMG, {210, 470, 166, 63}},
+        {eSpriteID::BRICK_ORANGE, {17, 319, 175, 57}},
+        {eSpriteID::BRICK_ORANGE_DMG, {206, 318, 175, 58}},
+        {eSpriteID::LASER, {837, 643, 11, 22}},
+        {eSpriteID::STAR, {798, 372, 84, 73}},
+        {eSpriteID::HEART, {804, 461, 79, 70}}
     };
 
 
@@ -597,7 +595,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                     const SDL_FRect& src = it->second;
                     dst.w = src.w * 0.7f;  // scale down width
                     dst.h = src.h * 0.7f;  // scale down height
-                    if (sprite.spriteID==SpriteID::BALL) {
+                    if (sprite.spriteID == eSpriteID::BALL) {
                         dst.w = src.w * 0.4f;  // scale down width
                         dst.h = src.h * 0.4f;  // scale down height
                     }
@@ -626,7 +624,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
             for (int col = 0; col < cols; ++col) {
                 float x = startX + col * (brickW + spacingX);
                 float y = startY + row * (brickH + spacingY);
-                SpriteID color = static_cast<SpriteID>(2 + (row % 4) * 2); // Choose color by row
+                eSpriteID color = static_cast<eSpriteID>(2 + (row % 4) * 2); // Choose color by row
 
                 // Place a static star in the middle of the top row
                 if (row == 2 && col == cols / 2) {
@@ -706,7 +704,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
                 if (isColliding(pos, col, pPos, pCol)) {
                     std::cout << "Star hit paddle! Granting laser effect.\n";
-                    World::addComponent(paddle, breakout::PowerUpType{1});
+                    World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
                     World::addComponent(paddle, breakout::TimedEffect{5.0f});
                     World::addComponent(star, breakout::DestroyedTag{});
                     break;
@@ -731,18 +729,26 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
    }
 
     id_type CreateStar(float x, float y) {
-        using namespace breakout;
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{x, y};
-        Sprite sprite{SpriteID::STAR};
+        Sprite sprite{eSpriteID::STAR};
         Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
 
         e.addAll(pos, sprite, collider, StarPowerTag{});
         return e.entity().id;
     }
 
+    id_type CreateHeart(float x, float y) {
+        bagel::Entity e = bagel::Entity::create();
 
+        Position pos{x, y};
+        Sprite sprite{eSpriteID::HEART};
+        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
+
+        e.addAll(pos, sprite, collider, HeartPowerTag{});
+        return e.entity().id;
+    }
     /**
  * @brief Creates a laser entity that moves upward and destroys bricks on contact.
  *
@@ -753,23 +759,15 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
  * @return The unique ID of the created laser entity.
  */
     id_type CreateLaser(float x, float y) {
-        using namespace breakout;
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{x, y};
         Velocity vel{0.0f, -100.0f}; // slower upward movement
-        Sprite sprite{SpriteID::LASER};
+        Sprite sprite{eSpriteID::LASER};
         Collider collider{11.0f, 22.0f}; // exact sprite size
         LaserTag tag;
 
         e.addAll(pos, vel, sprite, collider, tag);
         return e.entity().id;
     }
-
-
-
-
-
-
-
 } //namespace breakout;

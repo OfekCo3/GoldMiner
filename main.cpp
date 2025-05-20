@@ -101,9 +101,9 @@ int main() {
 
     if (!init(window, renderer, sheet)) return -1;
 
-    breakout::CreateBrick(2, breakout::SpriteID::BRICK_BLUE,   100.0f, 100.0f);
-    breakout::CreateBrick(1, breakout::SpriteID::BRICK_PURPLE, 300.0f, 150.0f);
-    breakout::CreateBrick(3, breakout::SpriteID::BRICK_YELLOW, 500.0f, 200.0f);
+    breakout::CreateBrick(2, breakout::eSpriteID::BRICK_BLUE,   100.0f, 100.0f);
+    breakout::CreateBrick(1, breakout::eSpriteID::BRICK_PURPLE, 300.0f, 150.0f);
+    breakout::CreateBrick(3, breakout::eSpriteID::BRICK_YELLOW, 500.0f, 200.0f);
 
     bool quit = false;
     SDL_Event e;
