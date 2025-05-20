@@ -353,8 +353,16 @@ void PowerUpSystem(float deltaTime) {
         }
 
         for (auto ent : toDestroy) {
-            std::cout << "Destroying entity: " << ent.id << "\n";
-            bagel::World::destroyEntity(ent);
+            std::cout << "Destroying entity (manual bit clear): " << ent.id << "\n";
+
+            // Get non-const reference to the actual mask
+            bagel::Mask& mask = bagel::World::maskMutable(ent);
+
+            int bitIndex = mask.ctz();
+            while (bitIndex >= 0) {
+                mask.clear(bagel::Mask::bit(bitIndex));
+                bitIndex = mask.ctz();
+            }
         }
     }
 
