@@ -60,7 +60,8 @@ namespace breakout {
 
     /** @brief Collider for detecting collisions with other entities */
     struct Collider {
-        int radius = 5; ///< Simple circular collider
+        float width = 0.0f;
+        float height = 0.0f;
     };
 
     /** @brief Tracks how many hits a brick can take before breaking */
