@@ -220,7 +220,7 @@ void CollisionSystem() {
                     bagel::ent_type paddle{pid};
                     if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
                         bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{3.0f});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{0.8f});
                         break;
                     }
                 }
@@ -322,7 +322,7 @@ void PowerUpSystem(float deltaTime) {
                 std::cout << "Laser fired!\n";
                 CreateLaser(pos.x + 10, pos.y);     // left
                 CreateLaser(pos.x + 80, pos.y);     // right
-                laserCooldown = 0.5f; // Fire every 0.5 seconds
+                laserCooldown = 0.05f;
             }
         }
     }
@@ -705,7 +705,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                 if (isColliding(pos, col, pPos, pCol)) {
                     std::cout << "Star hit paddle! Granting laser effect.\n";
                     World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
-                    World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                    World::addComponent(paddle, breakout::TimedEffect{2.0f});
                     World::addComponent(star, breakout::DestroyedTag{});
                     break;
                 }
@@ -762,7 +762,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{x, y};
-        Velocity vel{0.0f, -100.0f}; // slower upward movement
+        Velocity vel{0.0f, -200.0f}; // slower upward movement
         Sprite sprite{eSpriteID::LASER};
         Collider collider{11.0f, 22.0f}; // exact sprite size
         LaserTag tag;
