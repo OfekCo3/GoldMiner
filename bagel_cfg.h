@@ -20,5 +20,8 @@ BAGEL_STORAGE(breakout::DestroyedTag, TaggedStorage)
 BAGEL_STORAGE(breakout::FloorTag, TaggedStorage)
 BAGEL_STORAGE(breakout::Sprite, SparseStorage)
 BAGEL_STORAGE(breakout::BrickHealth, SparseStorage)
+BAGEL_STORAGE(breakout::LaserTag, TaggedStorage)
+BAGEL_STORAGE(breakout::StarPowerTag, TaggedStorage)
+
 
 

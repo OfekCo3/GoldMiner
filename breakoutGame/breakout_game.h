@@ -32,7 +32,9 @@ namespace breakout {
         BRICK_YELLOW_DMG = 7,
         BRICK_ORANGE = 8,
         BRICK_ORANGE_DMG = 9,
-        LASER = 10
+        LASER = 10,
+        STAR = 11
+
     };
 
     //----------------------------------
@@ -84,7 +86,7 @@ namespace breakout {
 
     /** @brief Temporary effect applied to the entity, with duration */
     struct TimedEffect {
-        float duration = 0.0f; ///< Duration of the temporary effect in seconds
+        float remaining = 0.0f; ///< Remaining time for power-up
     };
 
     /** @brief Number of lives remaining for the player */
@@ -106,6 +108,15 @@ namespace breakout {
     struct BreakAnimation {
         float timer = 0.0f; //seconds
     };
+
+    /** @brief Tag for falling star power-up */
+    struct StarPowerTag {};
+
+    /** @brief Tag to identify laser entities */
+    struct LaserTag {};
+
+
+
 
     //----------------------------------
     // Systems (declarations only)
@@ -129,7 +140,8 @@ namespace breakout {
     /**
      * @brief Activates power-up logic and tracks timed effects.
      */
-    void PowerUpSystem();
+    void PowerUpSystem(float deltaTime);
+
 
     /**
      * @brief Removes entities marked with DestroyedTag.
@@ -150,6 +162,8 @@ namespace breakout {
     void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex);
 
     void BreakAnimationSystem(float deltaTime);
+
+    void StarSystem(float deltaTime);
 
 
     //----------------------------------
@@ -211,6 +225,10 @@ namespace breakout {
      * @param health Health value assigned to each brick.
      */
     void CreateBrickGrid(int rows, int cols, int health);
+
+    id_type CreateStar(float x, float y);
+
+    id_type CreateLaser(float x, float y);
 
 } // namespace breakout
 

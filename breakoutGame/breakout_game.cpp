@@ -29,41 +29,69 @@ namespace breakout {
     // System Implementations
     //----------------------------------
 
-    /**
-     * @brief Updates positions of entities that have both Position and Velocity components.
-     */
-    void MovementSystem() {
-        bagel::Mask required;
-        required.set(bagel::Component<Position>::Bit);
-        required.set(bagel::Component<Velocity>::Bit);
+   /**
+ * @brief Updates positions of entities that have both Position and Velocity components.
+ *
+ * This system moves all entities based on their Velocity and handles collision with
+ * screen bounds (for the ball and paddle). Additionally, it checks for laser entities
+ * that move outside the top of the screen and marks them for destruction.
+ *
+ * It skips entities already marked with DestroyedTag.
+ */
+void MovementSystem() {
+    bagel::Mask required;
+    required.set(bagel::Component<Position>::Bit);
+    required.set(bagel::Component<Velocity>::Bit);
 
-        constexpr float SCREEN_WIDTH = 800.0f;
-        constexpr float SCREEN_HEIGHT = 600.0f;
+    constexpr float SCREEN_WIDTH = 800.0f;
+    constexpr float SCREEN_HEIGHT = 600.0f;
 
-        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
-            bagel::ent_type ent{id};
-            if (!bagel::World::mask(ent).test(required)) continue;
+    for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+        bagel::ent_type ent{id};
 
-            auto& pos = bagel::World::getComponent<Position>(ent);
-            auto& vel = bagel::World::getComponent<Velocity>(ent);
-            auto& collider = bagel::World::getComponent<Collider>(ent);
+        if (!bagel::World::mask(ent).test(required)) continue;
 
-            pos.x += vel.dx;
-            pos.y += vel.dy;
+        // Skip entities marked for destruction
+        if (bagel::World::mask(ent).test(bagel::Component<DestroyedTag>::Bit)) continue;
 
-            if (pos.x < 0 || pos.x + collider.width > SCREEN_WIDTH) {
-                std::cout << "Entity " << id << " hit horizontal wall\n";
-                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH - collider.width);
-                vel.dx *= -1;
-            }
+        // Optional debug: warn if a brick has Velocity (should not happen)
+        if (bagel::World::mask(ent).test(bagel::Component<BrickHealth>::Bit)) {
+            std::cout << "⚠️ Warning: Brick entity " << id << " has Velocity!\n";
+        }
 
-            if (pos.y < 0) {
-                std::cout << "Entity " << id << " hit top wall\n";
-                pos.y = 0;
-                vel.dy *= -1;
+        auto& pos = bagel::World::getComponent<Position>(ent);
+        auto& vel = bagel::World::getComponent<Velocity>(ent);
+        auto& collider = bagel::World::getComponent<Collider>(ent);
+
+        // Move entity
+        pos.x += vel.dx;
+        pos.y += vel.dy;
+
+        // Check if it's a laser that moved off-screen (above)
+        if (bagel::World::mask(ent).test(bagel::Component<LaserTag>::Bit)) {
+            if (pos.y + collider.height < 0) {
+                bagel::World::addComponent(ent, breakout::DestroyedTag{});
+                continue;
             }
         }
+
+        // Bounce off left/right walls
+        if (pos.x < 0 || pos.x + collider.width > SCREEN_WIDTH) {
+            std::cout << "Entity " << id << " hit horizontal wall\n";
+            pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH - collider.width);
+            vel.dx *= -1;
+        }
+
+        // Bounce off top wall
+        if (pos.y < 0) {
+            std::cout << "Entity " << id << " hit top wall\n";
+            pos.y = 0;
+            vel.dy *= -1;
+        }
     }
+}
+
+
 
     bool isColliding(const Position& a, const Collider& ca, const Position& b, const Collider& cb) {
         return (
@@ -75,24 +103,26 @@ namespace breakout {
     }
 
     /**
-     * @brief Detects and handles collisions between entities that have Position and Collider components.
-     *        Also checks optional components like BallTag and BrickHealth for special behavior.
-     */
-    void CollisionSystem() {
-        bagel::Mask requiredMask;
-        requiredMask.set(bagel::Component<Position>::Bit);
-        requiredMask.set(bagel::Component<Collider>::Bit);
+ * @brief Detects and handles collisions between entities that have Position and Collider components.
+ *        Handles ball vs. brick/paddle/floor/star, and laser vs. brick.
+ */
+void CollisionSystem() {
+    bagel::Mask requiredMask;
+    requiredMask.set(bagel::Component<Position>::Bit);
+    requiredMask.set(bagel::Component<Collider>::Bit);
 
-        for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
-            bagel::ent_type e1{id1};
-            if (!bagel::World::mask(e1).test(requiredMask)) continue;
-            if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
+    for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
+        bagel::ent_type e1{id1};
+        if (!bagel::World::mask(e1).test(requiredMask)) continue;
 
+        // Handle laser-brick separately
+        if (bagel::World::mask(e1).test(bagel::Component<LaserTag>::Bit)) {
             for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
                 if (id1 == id2) continue;
 
                 bagel::ent_type e2{id2};
                 if (!bagel::World::mask(e2).test(requiredMask)) continue;
+                if (!bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) continue;
                 if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
 
                 auto& p1 = bagel::World::getComponent<Position>(e1);
@@ -102,51 +132,113 @@ namespace breakout {
 
                 if (!isColliding(p1, c1, p2, c2)) continue;
 
-                // --- Collision with Brick ---
-                if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
-                    auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                std::cout << "Laser hit brick!\n";
 
-                    // Prevent hitting already broken bricks
-                    if (brick.hits <= 0) continue;
+                auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                if (brick.hits <= 0) continue;
+                brick.hits--;
 
-                    std::cout << "Ball hit brick! Entity: " << e2.id
-                              << ", Remaining hits: " << brick.hits << "\n";
+                if (!bagel::World::mask(e1).test(bagel::Component<DestroyedTag>::Bit)) {
+                    bagel::World::addComponent(e1, breakout::DestroyedTag{});
+                }
 
-                    brick.hits--;
+                if (brick.hits <= 0) {
+                    auto& sprite = bagel::World::getComponent<Sprite>(e2);
+                    sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
 
-                    auto& vel = bagel::World::getComponent<Velocity>(e1);
-                    vel.dy *= -1; // Invert vertical direction
-
-                    if (brick.hits <= 0) {
-                        // Change sprite to broken version
-                        auto& sprite = bagel::World::getComponent<Sprite>(e2);
-                        sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
-
-                        // Start break animation only if not already active
-                        if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
-                            bagel::World::addComponent<BreakAnimation>(e2, {0.5f}); // half a second animation
-                        }
+                    if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
+                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.0f});
                     }
-                    break; // One collision per frame
                 }
 
-                    // --- Collision with Paddle ---
-                else if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
-                    std::cout << "Ball hit paddle! Inverting Y velocity.\n";
-                    auto& vel = bagel::World::getComponent<Velocity>(e1);
-                    vel.dy *= -1;
-                    break;
+                break;
+            }
+
+            continue; // Done handling laser, skip rest
+        }
+
+        // === Ball collision starts here ===
+        if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
+
+        for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
+            if (id1 == id2) continue;
+
+            bagel::ent_type e2{id2};
+            if (!bagel::World::mask(e2).test(requiredMask)) continue;
+            if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
+
+            auto& p1 = bagel::World::getComponent<Position>(e1);
+            auto& c1 = bagel::World::getComponent<Collider>(e1);
+            auto& p2 = bagel::World::getComponent<Position>(e2);
+            auto& c2 = bagel::World::getComponent<Collider>(e2);
+
+            if (!isColliding(p1, c1, p2, c2)) continue;
+
+            // --- Ball hits Brick ---
+            if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
+                auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                if (brick.hits <= 0) continue;
+
+                std::cout << "Ball hit brick! Entity: " << e2.id
+                          << ", Remaining hits: " << brick.hits << "\n";
+
+                brick.hits--;
+
+                auto& vel = bagel::World::getComponent<Velocity>(e1);
+                vel.dy *= -1;
+
+                if (brick.hits <= 0) {
+                    auto& sprite = bagel::World::getComponent<Sprite>(e2);
+                    sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
+
+                    if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
+                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
+                    }
                 }
 
-                    // --- Collision with Floor ---
-                else if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
-                    std::cout << "Ball hit the floor!\n";
-                    bagel::World::addComponent<DestroyedTag>(e1, {});
-                    break;
+                break;
+            }
+
+            // --- Ball hits Paddle ---
+            if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
+                std::cout << "Ball hit paddle! Inverting Y velocity.\n";
+                auto& vel = bagel::World::getComponent<Velocity>(e1);
+                vel.dy *= -1;
+                break;
+            }
+
+            // --- Ball hits Floor ---
+            if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
+                std::cout << "Ball hit the floor!\n";
+                if (!bagel::World::mask(e1).test(bagel::Component<DestroyedTag>::Bit)) {
+                    bagel::World::addComponent(e1, breakout::DestroyedTag{});
                 }
+                break;
+            }
+
+            // --- Ball hits Star ---
+            if (bagel::World::mask(e2).test(bagel::Component<StarPowerTag>::Bit)) {
+                std::cout << "Ball hit star! Paddle gains laser power.\n";
+
+                for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
+                    bagel::ent_type paddle{pid};
+                    if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
+                        bagel::World::addComponent(paddle, breakout::PowerUpType{1});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                        break;
+                    }
+                }
+
+                bagel::World::addComponent(e2, breakout::DestroyedTag{});
+
+                auto& vel = bagel::World::getComponent<Velocity>(e1);
+                vel.dy *= -1;
+                break;
             }
         }
     }
+}
+
 
     /**
      * @brief Reads player input and updates paddle position accordingly.
@@ -183,26 +275,70 @@ namespace breakout {
     }
 
     /**
-     * @brief Applies power-up effects to entities, checking optional components like PaddleControl and BallTag.
-     */
-    void PowerUpSystem() {
-        bagel::Mask required;
-        required.set(bagel::Component<PowerUpType>::Bit);
-        required.set(bagel::Component<TimedEffect>::Bit);
+ * @brief Handles time-limited power-up effects for entities, such as laser firing.
+ *
+ * This system looks for entities (typically the paddle) that have both
+ * PowerUpType and TimedEffect components. It decreases the remaining time
+ * for the power-up and removes the effect when time expires.
+ * If the power-up is active (type == 1), the entity fires lasers upward
+ * every 0.5 seconds.
+ *
+ * @param deltaTime The time in seconds since the last frame (used to update timers)
+ */
+void PowerUpSystem(float deltaTime) {
+    using namespace bagel;
 
-        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
-            bagel::ent_type ent{id};
-            if (bagel::World::mask(ent).test(required)) {
-                bool hasPaddle = bagel::World::mask(ent).test(bagel::Component<PaddleControl>::Bit);
-                bool hasBall = bagel::World::mask(ent).test(bagel::Component<BallTag>::Bit);
-                (void)hasPaddle; (void)hasBall;
+    static float laserCooldown = 0.0f;
+
+    // Required components: power-up info, timer, paddle position and control
+    Mask required;
+    required.set(Component<PowerUpType>::Bit);
+    required.set(Component<TimedEffect>::Bit);
+    required.set(Component<Position>::Bit);
+    required.set(Component<PaddleControl>::Bit);
+
+    for (id_type id = 0; id <= World::maxId().id; ++id) {
+        ent_type ent{id};
+
+        // Ensure entity has required components and is not marked for destruction
+        if (!World::mask(ent).test(required)) continue;
+        if (World::mask(ent).test(Component<DestroyedTag>::Bit)) continue;
+
+        auto& effect = World::getComponent<TimedEffect>(ent);
+        auto& power = World::getComponent<PowerUpType>(ent);
+
+        // Update power-up timer
+        effect.remaining -= deltaTime;
+
+        // Remove power-up if expired
+        if (effect.remaining <= 0.0f) {
+            std::cout << "Power-up expired.\n";
+            World::delComponent<PowerUpType>(ent);
+            World::delComponent<TimedEffect>(ent);
+            continue;
+        }
+
+        // Handle laser power-up
+        if (power.type == 1) {
+            laserCooldown -= deltaTime;
+            if (laserCooldown <= 0.0f) {
+                const auto& pos = World::getComponent<Position>(ent);
+                std::cout << "Laser fired!\n";
+                CreateLaser(pos.x + 10, pos.y);     // left
+                CreateLaser(pos.x + 80, pos.y);     // right
+                laserCooldown = 0.5f; // Fire every 0.5 seconds
             }
         }
     }
+}
+
+
+
+
 
     /**
-     * @brief Removes entities that are marked for deletion using the DestroyedTag component.
-     */
+ * @brief Removes entities that are marked for deletion using the DestroyedTag component.
+ */
     void DestroySystem() {
         bagel::Mask required;
         required.set(bagel::Component<DestroyedTag>::Bit);
@@ -221,6 +357,7 @@ namespace breakout {
             bagel::World::destroyEntity(ent);
         }
     }
+
 
     /**
      * @brief Displays UI-related data such as score and lives for entities that hold those components.
@@ -334,65 +471,91 @@ namespace breakout {
         return e.entity().id;
     }
 
-    /**
-  * @brief Main game loop for the Breakout ECS-style game.
-  *
-  * Initializes all core entities (UI, paddle, ball, bricks),
-  * runs input, system updates, and rendering each frame.
-  *
-  * @param ren SDL renderer for drawing.
-  * @param tex Texture sheet for all game sprites.
-  */
-    void run(SDL_Renderer* ren, SDL_Texture* tex) {
-        using namespace bagel;
+   /**
+ * @brief Main game loop for the Breakout ECS-style game.
+ *
+ * Initializes all core entities (UI, paddle, ball, bricks),
+ * runs input, system updates, and rendering each frame.
+ * After 5 seconds, a star power-up is spawned that grants laser-shooting
+ * ability if collected by the paddle.
+ *
+ * @param ren SDL renderer for drawing.
+ * @param tex Texture sheet for all game sprites.
+ */
+/**
+ * @brief Main game loop for the Breakout ECS-style game.
+ *
+ * Initializes all core entities (UI, paddle, ball, bricks),
+ * and continuously runs input handling, system updates, and rendering each frame.
+ *
+ * After 0.6 seconds, a special star power-up is spawned. If the ball hits it,
+ * the paddle gains laser-shooting ability for 5 seconds.
+ *
+ * This loop uses deltaTime (elapsed time per frame) to update all time-based systems.
+ *
+ * @param ren SDL renderer used for drawing game objects.
+ * @param tex SDL texture sheet containing all game sprites.
+ */
+void run(SDL_Renderer* ren, SDL_Texture* tex) {
+    using namespace bagel;
 
-        CreateUIManager();
-        CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
-        CreateBall();
-        CreateFloor();
-        CreateBrickGrid(4, 6, 1); // 4 rows × 6 cols, health = 1
+    // === Initialization ===
+    CreateUIManager();
+    CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
+    CreateBall();
+    CreateFloor();
+    CreateBrickGrid(4, 6, 1); // 4 rows × 6 cols, health = 1
 
-        bool quit = false;
-        SDL_Event e;
+    // Timer and control flag for delayed star spawning
+    float elapsedTime = 0.0f;
+    bool starSpawned = false;
 
-        while (!quit) {
-            Uint32 frameStart = SDL_GetTicks();
+    bool quit = false;
+    SDL_Event e;
 
-            // === Input handling ===
-            SDL_PumpEvents();
+    while (!quit) {
+        Uint32 frameStart = SDL_GetTicks();
 
-            while (SDL_PollEvent(&e)) {
-                if (e.type == SDL_EVENT_QUIT ||
-                    (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)) {
-                    quit = true;
-                    }
+        // === Input handling ===
+        SDL_PumpEvents();
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_QUIT ||
+                (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)) {
+                quit = true;
             }
-
-            // === System updates ===
-            PlayerControlSystem();  // Moves paddle
-            MovementSystem();       // Moves ball
-            CollisionSystem();      // Handles ball collisions
-            PowerUpSystem();        // Future logic
-
-            World::step();          // Apply component changes
-
-            // === Rendering ===
-            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-            SDL_RenderClear(ren);
-
-            RenderSystem(ren, tex); // Uses SpriteID and Position
-
-            SDL_RenderPresent(ren);
-
-            // Frame limiter (~60 FPS)
-            Uint32 frameTime = SDL_GetTicks() - frameStart;
-            if (frameTime < 16) SDL_Delay(16 - frameTime);
-
-            float deltaTime = frameTime / 1000.0f;
-            BreakAnimationSystem(deltaTime);
-            DestroySystem();        // Removes destroyed entities
         }
+
+        // === Game logic systems ===
+        PlayerControlSystem();     // Move paddle based on user input
+        MovementSystem();          // Move entities with velocity (ball, lasers)
+        CollisionSystem();         // Handle collisions (ball-brick, laser-brick, ball-star)
+
+        // deltaTime will be passed in later
+        World::step();             // Apply queued component changes
+
+        // === Rendering ===
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+        RenderSystem(ren, tex);
+        SDL_RenderPresent(ren);
+
+        // === Frame limiting (target ~60 FPS) ===
+        Uint32 frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < 16) SDL_Delay(16 - frameTime);
+
+        // === Time-based systems ===
+        float deltaTime = frameTime / 1000.0f;
+        elapsedTime += deltaTime;
+
+        BreakAnimationSystem(deltaTime); // Animate broken bricks
+        PowerUpSystem(deltaTime);        // Handle laser timer and shooting
+        DestroySystem();                 // Remove entities with DestroyedTag
+
+
     }
+}
+
+
 
     static const std::unordered_map<SpriteID, SDL_FRect> SPRITE_ATLAS = {
         {SpriteID::BALL,            {800, 548, 87, 77}},
@@ -405,7 +568,9 @@ namespace breakout {
         {SpriteID::BRICK_YELLOW_DMG,{210, 470, 166, 63}},
         {SpriteID::BRICK_ORANGE,    {17, 319, 175, 57}},
         {SpriteID::BRICK_ORANGE_DMG,{206, 318, 175, 58}},
-        {SpriteID::LASER,           {837, 643, 11, 22}}
+        {SpriteID::LASER,           {837, 643, 11, 22}},
+           {SpriteID::STAR, {798, 372, 84, 73}}
+
     };
 
 
@@ -438,6 +603,14 @@ namespace breakout {
         }
     }
 
+    /**
+ * @brief Creates a full grid of bricks arranged in rows and columns.
+ *        In the center of the top row, a star power-up is placed instead of a brick.
+ *
+ * @param rows Number of brick rows
+ * @param cols Number of bricks per row
+ * @param health Health value assigned to each brick
+ */
     void CreateBrickGrid(int rows, int cols, int health) {
         const float brickW = 120.0f, brickH = 40.0f;
         const float spacingX = 5.0f, spacingY = 5.0f;
@@ -449,12 +622,27 @@ namespace breakout {
             for (int col = 0; col < cols; ++col) {
                 float x = startX + col * (brickW + spacingX);
                 float y = startY + row * (brickH + spacingY);
-                SpriteID color = static_cast<SpriteID>(2 + (row % 4) * 2); // AMAL: BRICK_* enums
-                CreateBrick(health, color, x, y);
+                SpriteID color = static_cast<SpriteID>(2 + (row % 4) * 2); // Choose color by row
+
+                // Place a static star in the middle of the top row
+                if (row == 3 && col == cols / 2) {
+                    CreateStar(x, y); // This star does not fall – no velocity
+                } else {
+                    CreateBrick(health, color, x, y);
+                }
             }
         }
     }
 
+
+    /**
+ * @brief Handles timing of break animations and destroys the entity when the animation is complete.
+ *
+ * Any entity with a BreakAnimation component will have its timer incremented each frame.
+ * Once the timer exceeds 0.555 seconds, the entity is marked for destruction (if not already).
+ *
+ * @param deltaTime Time since last frame (in seconds)
+ */
     void BreakAnimationSystem(float deltaTime) {
         bagel::Mask breakMask;
         breakMask.set(bagel::Component<BreakAnimation>::Bit);
@@ -462,14 +650,122 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type entity{id};
             if (!bagel::World::mask(entity).test(breakMask)) continue;
+            if (bagel::World::mask(entity).test(bagel::Component<DestroyedTag>::Bit)) continue;
 
             auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
             anim.timer += deltaTime;
 
             if (anim.timer >= 0.555f) {
-                bagel::World::addComponent<DestroyedTag>(entity, {});
-
+                bagel::World::addComponent(entity, breakout::DestroyedTag{});
             }
         }
     }
+
+
+    void StarSystem(float deltaTime) {
+        using namespace bagel;
+
+        Mask required;
+        required.set(Component<Position>::Bit);
+        required.set(Component<Velocity>::Bit);
+        required.set(Component<Collider>::Bit);
+        required.set(Component<StarPowerTag>::Bit);
+
+        Mask paddleMask;
+        paddleMask.set(Component<Position>::Bit);
+        paddleMask.set(Component<Collider>::Bit);
+        paddleMask.set(Component<PaddleControl>::Bit);
+
+        Mask floorMask;
+        floorMask.set(Component<Position>::Bit);
+        floorMask.set(Component<Collider>::Bit);
+        floorMask.set(Component<FloorTag>::Bit);
+
+        for (id_type starID = 0; starID <= World::maxId().id; ++starID) {
+            ent_type star{starID};
+            if (!World::mask(star).test(required)) continue;
+
+            auto& pos = World::getComponent<Position>(star);
+            auto& vel = World::getComponent<Velocity>(star);
+            auto& col = World::getComponent<Collider>(star);
+
+            // Move star
+            pos.y += vel.dy * deltaTime;
+
+            // Check collision with paddle
+            for (id_type pid = 0; pid <= World::maxId().id; ++pid) {
+                ent_type paddle{pid};
+                if (!World::mask(paddle).test(paddleMask)) continue;
+
+                auto& pPos = World::getComponent<Position>(paddle);
+                auto& pCol = World::getComponent<Collider>(paddle);
+
+                if (isColliding(pos, col, pPos, pCol)) {
+                    std::cout << "Star hit paddle! Granting laser effect.\n";
+                    World::addComponent(paddle, breakout::PowerUpType{1});
+                    World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                    World::addComponent(star, breakout::DestroyedTag{});
+                    break;
+                }
+            }
+
+            // Check collision with floor
+            for (id_type fid = 0; fid <= World::maxId().id; ++fid) {
+                ent_type floor{fid};
+                if (!World::mask(floor).test(floorMask)) continue;
+
+                auto& fPos = World::getComponent<Position>(floor);
+                auto& fCol = World::getComponent<Collider>(floor);
+
+                if (isColliding(pos, col, fPos, fCol)) {
+                    std::cout << "Star hit floor! Removing.\n";
+                    World::addComponent(star, breakout::DestroyedTag{});
+                    break;
+                }
+            }
+        }
+   }
+
+    id_type CreateStar(float x, float y) {
+        using namespace breakout;
+        bagel::Entity e = bagel::Entity::create();
+
+        Position pos{x, y};
+        Sprite sprite{SpriteID::STAR};
+        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
+
+        e.addAll(pos, sprite, collider, StarPowerTag{});
+        return e.entity().id;
+    }
+
+
+    /**
+ * @brief Creates a laser entity that moves upward and destroys bricks on contact.
+ *
+ * The laser moves slowly (dy = -100) to visually match a "weaker" power-up effect.
+ *
+ * @param x Horizontal position where the laser is spawned.
+ * @param y Vertical position where the laser is spawned.
+ * @return The unique ID of the created laser entity.
+ */
+    id_type CreateLaser(float x, float y) {
+        using namespace breakout;
+        bagel::Entity e = bagel::Entity::create();
+
+        Position pos{x, y};
+        Velocity vel{0.0f, -100.0f}; // slower upward movement
+        Sprite sprite{SpriteID::LASER};
+        Collider collider{11.0f, 22.0f}; // exact sprite size
+        LaserTag tag;
+
+        e.addAll(pos, vel, sprite, collider, tag);
+        return e.entity().id;
+    }
+
+
+
+
+
+
+
 } //namespace breakout;
