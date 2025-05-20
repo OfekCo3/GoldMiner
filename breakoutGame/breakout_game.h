@@ -35,7 +35,6 @@ namespace breakout {
         LASER = 10
     };
 
-
     //----------------------------------
     // Components
     //----------------------------------
@@ -163,7 +162,7 @@ namespace breakout {
      */
     int CreateBall();
 
-        /**
+    /**
      * @brief Creates a brick entity with specific health, sprite color, and position.
      * @param health Number of hits until the brick breaks.
      * @param color SpriteID enum value to determine brick color.
@@ -204,7 +203,7 @@ namespace breakout {
     */
     id_type CreateFloor();
 
-        /**
+    /**
      * @brief Creates a full grid of bricks arranged in rows and columns.
      *
      * @param rows Number of brick rows.

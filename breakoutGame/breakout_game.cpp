@@ -42,7 +42,7 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (!bagel::World::mask(ent).test(required)) continue;
-
+            auto& collider = bagel::World::getComponent<Collider>(ent);
             auto& pos = bagel::World::getComponent<Position>(ent);
             auto& vel = bagel::World::getComponent<Velocity>(ent);
 
@@ -51,9 +51,9 @@ namespace breakout {
             pos.y += vel.dy;
 
             // Reflect from left/right walls
-            if (pos.x < 0 || pos.x > SCREEN_WIDTH) {
+            if (pos.x < 0 || pos.x + collider.width > SCREEN_WIDTH) {
                 std::cout << "Entity " << id << " hit horizontal wall\n";
-                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH);
+                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH - collider.width);
                 vel.dx *= -1;
             }
 
@@ -117,7 +117,6 @@ namespace breakout {
                         bagel::World::addComponent<BreakAnimation>(e2, {0.1});
 
                     }
-
                     break;
                 }
 
@@ -169,7 +168,8 @@ namespace breakout {
             if (keys[control.keyRight]) {
                 pos.x += speed;
             }
-            pos.x = std::clamp(pos.x, 0.0f, 800.0f - 161.0f); // הוספתי- שהמחבט לא יצא מהמסך
+            // Reflect from left/right walls
+            pos.x = std::clamp(pos.x, 0.0f, 800.0f - (161.0f * 0.7f));
         }
 
     }
@@ -228,25 +228,17 @@ namespace breakout {
     // Entity Creation Functions
     //----------------------------------
 
-        /**
-     * @brief Creates a new ball entity with motion, rendering, collision, and tagging.
-     *
-     * The ball is initialized at a fixed position with a velocity vector,
-     * a sprite for rendering, a circular collider, and a BallTag for identification.
-     *
-     * @return The unique entity ID of the created ball.
-     */
     /**
- * @brief Creates a new ball entity with position, velocity, sprite, and collision.
- *        The ball starts near the center of the screen and moves upward.
- *
- * @return Unique entity ID
- */
+     * @brief Creates a new ball entity with position, velocity, sprite, and collision.
+     *        The ball starts near the center of the screen and moves upward.
+     *
+     * @return Unique entity ID
+     */
     id_type CreateBall() {
         bagel::Entity e = bagel::Entity::create();
 
-        Position pos{400.0f, 450.0f};             // Start near paddle
-        Velocity vel{1.2f, -1.5f};
+        Position pos{400.0f, 450.0f};
+        Velocity vel{1.2f, 1.5f};
         Sprite sprite{SpriteID::BALL};
         Collider collider{10.0f, 10.0f};
         BallTag tag;
@@ -255,16 +247,19 @@ namespace breakout {
         return e.entity().id;
     }
 
-
-
-
+    /**
+     * @brief Creates a new brick entity with position, brickHealth sprite, and collision.
+     *        The ball starts near the center of the screen and moves upward.
+     *
+     * @return Unique entity ID
+     */
     id_type CreateBrick(int health, SpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
 
         e.addAll(
             Position{x, y},
             Sprite{color},
-            Collider{171.0f, 59.0f},
+            Collider{171.0f * 0.7f, 59.0f * 0.7f},
             BrickHealth{health}
         );
 
@@ -283,17 +278,14 @@ namespace breakout {
      */
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
-
-        Position pos{320.0f, 560.0f};          // Near bottom
+        Position pos{320.0f, 560.0f};
         Sprite sprite{SpriteID::PADDLE};
-        Collider collider{161.0f, 55.0f};                // Width ~ matches paddle image
+        Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
         PaddleControl control{left, right};
 
         e.addAll(pos, sprite, collider, control);
         return e.entity().id;
     }
-
-
 
     /**
      * @brief Creates a falling power-up with a defined type and timed effect.
@@ -316,6 +308,10 @@ namespace breakout {
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a floor entity to check if ball hit the floor - game over.
+     * @return Unique entity ID
+     */
     id_type CreateFloor() {
         bagel::Entity e = bagel::Entity::create();
         e.addAll(Position{0.0f, 590.0f}, Collider{800.0f, 10.0f}, FloorTag{});
@@ -338,9 +334,7 @@ namespace breakout {
         CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
         CreateBall();
         CreateFloor();
-        CreateBrickGrid(4, 6, 1); // 4 rows × 6 cols, health = 2
-
-
+        CreateBrickGrid(4, 6, 1); // 4 rows × 6 cols, health = 1
 
         bool quit = false;
         SDL_Event e;
@@ -380,9 +374,6 @@ namespace breakout {
             if (frameTime < 16) SDL_Delay(16 - frameTime);
         }
     }
-
-
-
 
     static const std::unordered_map<SpriteID, SDL_FRect> SPRITE_ATLAS = {
         {SpriteID::BALL,            {800, 548, 87, 77}},
@@ -428,35 +419,6 @@ namespace breakout {
         }
     }
 
-    /*void CreateBrickGrid(int rows, int cols, int health) {
-        const float brickW = 120.0f;
-        const float brickH = 30.0f;
-        const float spacingX = 10.0f;
-        const float spacingY = 10.0f;
-
-        float totalWidth = cols * brickW + (cols - 1) * spacingX;
-        float startX = (800.0f - totalWidth) / 2.0f;
-        float startY = 80.0f;
-
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                float x = startX + col * (brickW + spacingX);
-                float y = startY + row * (brickH + spacingY);
-
-                SpriteID color;
-                switch (row % 4) {
-                    case 0: color = SpriteID::BRICK_BLUE;   break;
-                    case 1: color = SpriteID::BRICK_PURPLE; break;
-                    case 2: color = SpriteID::BRICK_YELLOW; break;
-                    case 3: color = SpriteID::BRICK_ORANGE; break;
-                    default: color = SpriteID::BRICK_BLUE;  break;
-                }
-
-                CreateBrick(health, color, x, y);
-            }
-        }
-    }*/
-
     void CreateBrickGrid(int rows, int cols, int health) {
         const float brickW = 120.0f, brickH = 40.0f;
         const float spacingX = 5.0f, spacingY = 5.0f;
@@ -491,15 +453,4 @@ namespace breakout {
             }
         }
     }
-
-
-
-
-
-
-}
-
-
-
-
-// namespace breakout
+} //namespace breakout;
