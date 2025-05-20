@@ -12,6 +12,7 @@
 #include "SDL3_image/SDL_image.h"
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 
 namespace std {
     template <>
@@ -465,7 +466,7 @@ namespace breakout {
             auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
             anim.timer += deltaTime;
 
-            if (anim.timer >= 1.0f) {
+            if (anim.timer >= 0.555f) {
                 bagel::World::addComponent<DestroyedTag>(entity, {});
 
             }
