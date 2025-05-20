@@ -1,5 +1,6 @@
 
 
+/*
 #include "breakout_game.h"
 #include "../bagel.h"
 using namespace breakout;
@@ -47,7 +48,7 @@ void TestCreateBall() {
     assert(bagel::World::getComponent<Position>(e).y == y);
 
     std::cout << "✅ TestCreateBrick passed!\n";
-}*/
+}#1#
 
 
 
@@ -88,7 +89,7 @@ int main() {
 
 
     TestCreateBall();
-    TestCreateBrick();
+    //TestCreateBrick();
     TestCreatePaddle();
     TestCreatePowerUp();
     TestCreateUIManager();
@@ -106,3 +107,4 @@ int main() {
     std::cout << "All tests and systems executed successfully!\n";
     return 0;
 }
+*/

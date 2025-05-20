@@ -11,6 +11,7 @@
 #define BREAKOUT_GAME_H
 
 #include <cstdint>
+//#include "SDL3_image/SDL_image.h"
 #include "SDL3_image/SDL_image.h"
 
 
@@ -194,6 +195,15 @@ namespace breakout {
     * @return The unique ID of the created entity.
     */
     id_type CreateFloor();
+
+        /**
+     * @brief Creates a full grid of bricks arranged in rows and columns.
+     *
+     * @param rows Number of brick rows.
+     * @param cols Number of bricks per row.
+     * @param health Health value assigned to each brick.
+     */
+    void CreateBrickGrid(int rows, int cols, int health);
 
 } // namespace breakout
 
