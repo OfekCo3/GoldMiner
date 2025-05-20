@@ -103,6 +103,11 @@ namespace breakout {
 
     /** @brief Tag component to mark the floor */
     struct FloorTag {};
+
+    struct BreakAnimation {
+        float timer = 0.0f; //seconds
+    };
+
     //----------------------------------
     // Systems (declarations only)
     //----------------------------------
@@ -144,6 +149,8 @@ namespace breakout {
      * @param tex The texture sheet containing all sprites.
      */
     void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex);
+
+    void BreakAnimationSystem(float deltaTime);
 
 
     //----------------------------------

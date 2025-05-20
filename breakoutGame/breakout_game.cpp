@@ -112,10 +112,15 @@ namespace breakout {
                     vel.dy *= -1;
 
                     if (brick.hits <= 0) {
-                        bagel::World::addComponent<DestroyedTag>(e2, {});
+                        auto& sprite = bagel::World::getComponent<Sprite>(e2);
+                        sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
+                        bagel::World::addComponent<BreakAnimation>(e2, {0.1});
+
                     }
+
                     break;
                 }
+
 
 
                 // Ball hits paddle → reverse vertical direction
@@ -243,7 +248,7 @@ namespace breakout {
         Position pos{400.0f, 450.0f};             // Start near paddle
         Velocity vel{1.2f, -1.5f};
         Sprite sprite{SpriteID::BALL};
-        Collider collider{24.0f, 24.0f};
+        Collider collider{10.0f, 10.0f};
         BallTag tag;
 
         e.addAll(pos, vel, sprite, collider, tag);
@@ -413,6 +418,10 @@ namespace breakout {
                     const SDL_FRect& src = it->second;
                     dst.w = src.w * 0.7f;  // scale down width
                     dst.h = src.h * 0.7f;  // scale down height
+                    if (sprite.spriteID==SpriteID::BALL) {
+                        dst.w = src.w * 0.4f;  // scale down width
+                        dst.h = src.h * 0.4f;  // scale down height
+                    }
                     SDL_RenderTexture(ren, tex, &src, &dst);
                 }
             }
@@ -464,6 +473,25 @@ namespace breakout {
             }
         }
     }
+
+    void BreakAnimationSystem(float deltaTime) {
+        bagel::Mask breakMask;
+        breakMask.set(bagel::Component<BreakAnimation>::Bit);
+
+        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+            bagel::ent_type entity{id};
+            if (!bagel::World::mask(entity).test(breakMask)) continue;
+
+            auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
+            anim.timer += deltaTime;
+
+            if (anim.timer >= 1.0f) {
+                bagel::World::addComponent<DestroyedTag>(entity, {});
+
+            }
+        }
+    }
+
 
 
 
