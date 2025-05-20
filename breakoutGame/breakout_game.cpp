@@ -229,7 +229,7 @@ void CollisionSystem() {
                     bagel::ent_type paddle{pid};
                     if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
                         bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{3.0f});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{0.8f});
                         break;
                     }
                 }
@@ -240,6 +240,26 @@ void CollisionSystem() {
                 vel.dy *= -1;
                 break;
             }
+            // --- Ball hits Heart ---
+            if (bagel::World::mask(e2).test(bagel::Component<HeartPowerTag>::Bit)) {
+                std::cout << "Ball hit heart! Paddle becomes wider.\n";
+
+                for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
+                    bagel::ent_type paddle{pid};
+                    if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
+                        bagel::World::addComponent(paddle, breakout::PowerUpType{breakout::ePowerUpType::WIDE_PADDLE});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                        break;
+                    }
+                }
+
+                bagel::World::addComponent(e2, breakout::DestroyedTag{});
+
+                auto& vel = bagel::World::getComponent<Velocity>(e1);
+                vel.dy *= -1;
+                break;
+            }
+
         }
     }
 }
@@ -324,13 +344,10 @@ void CollisionSystem() {
     }
 
     /**
- * @brief Handles time-limited power-up effects for entities, such as laser firing.
+ * @brief Handles time-limited power-up effects for entities, such as laser firing or wide paddle.
  *
- * This system looks for entities (typically the paddle) that have both
- * PowerUpType and TimedEffect components. It decreases the remaining time
- * for the power-up and removes the effect when time expires.
- * If the power-up is active (type == 1), the entity fires lasers upward
- * every 0.5 seconds.
+ * This system manages active power-ups by decreasing their timers and applying their effects.
+ * When time runs out, it removes the effect and resets entity properties (e.g., paddle width).
  *
  * @param deltaTime The time in seconds since the last frame (used to update timers)
  */
@@ -349,25 +366,34 @@ void PowerUpSystem(float deltaTime) {
     for (id_type id = 0; id <= World::maxId().id; ++id) {
         ent_type ent{id};
 
-        // Ensure entity has required components and is not marked for destruction
+        // Skip entities without required components or marked for destruction
         if (!World::mask(ent).test(required)) continue;
         if (World::mask(ent).test(Component<DestroyedTag>::Bit)) continue;
 
         auto& effect = World::getComponent<TimedEffect>(ent);
         auto& power = World::getComponent<PowerUpType>(ent);
 
-        // Update power-up timer
+        // Update timer
         effect.remaining -= deltaTime;
 
-        // Remove power-up if expired
+        // If timer expired, remove power-up and reset properties
         if (effect.remaining <= 0.0f) {
             std::cout << "Power-up expired.\n";
+
+            if (power.powerUp == breakout::ePowerUpType::WIDE_PADDLE) {
+                if (World::mask(ent).test(Component<Collider>::Bit)) {
+                    auto& col = World::getComponent<Collider>(ent);
+                    col.width = 100.0f; // Reset paddle width
+                    std::cout << "Paddle size restored.\n";
+                }
+            }
+
             World::delComponent<PowerUpType>(ent);
             World::delComponent<TimedEffect>(ent);
             continue;
         }
 
-        // Handle laser power-up
+        // Laser power-up: fires two lasers every X seconds
         if (power.powerUp == ePowerUpType::SHOTING_LASER) {
             laserCooldown -= deltaTime;
             if (laserCooldown <= 0.0f) {
@@ -375,15 +401,24 @@ void PowerUpSystem(float deltaTime) {
                 std::cout << "Laser fired!\n";
                 CreateLaser(pos.x + 10, pos.y);     // left
                 CreateLaser(pos.x + 80, pos.y);     // right
-                laserCooldown = 0.5f; // Fire every 0.5 seconds
+                laserCooldown = 0.05f; // adjust as needed
+            }
+        }
+
+        // Wide paddle effect: widen only once
+        if (power.powerUp == breakout::ePowerUpType::WIDE_PADDLE) {
+            auto& col = World::getComponent<Collider>(ent);
+            if (col.width < 180.0f) {
+                col.width = 180.0f;
+                std::cout << "Paddle widened.\n";
             }
         }
     }
 }
 
     /**
- * @brief Removes entities that are marked for deletion using the DestroyedTag component.
- */
+     * @brief Removes entities that are marked for deletion using the DestroyedTag component.
+     */
     void DestroySystem() {
         bagel::Mask required;
         required.set(bagel::Component<DestroyedTag>::Bit);
@@ -671,7 +706,8 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
         {eSpriteID::BRICK_ORANGE_DMG, {206, 318, 175, 58}},
         {eSpriteID::LASER, {837, 643, 11, 22}},
         {eSpriteID::STAR, {798, 372, 84, 73}},
-        {eSpriteID::HEART, {804, 461, 79, 70}}
+        {eSpriteID::HEART, {804, 461, 79, 70}},
+
     };
 
 
@@ -728,7 +764,10 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                 // Place a static star in the middle of the top row
                 if (row == 2 && col == cols / 2) {
                     CreateStar(x, y); // This star does not fall – no velocity
-                } else {
+                }else if (row == 3 && col == cols / 2) {
+                    CreateHeart(x,y);
+                }
+                else {
                     CreateBrick(health, color, x, y);
                 }
             }
@@ -804,7 +843,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                 if (isColliding(pos, col, pPos, pCol)) {
                     std::cout << "Star hit paddle! Granting laser effect.\n";
                     World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
-                    World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                    World::addComponent(paddle, breakout::TimedEffect{2.0f});
                     World::addComponent(star, breakout::DestroyedTag{});
                     break;
                 }
@@ -861,7 +900,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{x, y};
-        Velocity vel{0.0f, -100.0f}; // slower upward movement
+        Velocity vel{0.0f, -200.0f}; // slower upward movement
         Sprite sprite{eSpriteID::LASER};
         Collider collider{11.0f, 22.0f}; // exact sprite size
         LaserTag tag;
