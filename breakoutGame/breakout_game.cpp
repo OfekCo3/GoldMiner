@@ -42,7 +42,7 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (!bagel::World::mask(ent).test(required)) continue;
-
+            auto& collider = bagel::World::getComponent<Collider>(ent);
             auto& pos = bagel::World::getComponent<Position>(ent);
             auto& vel = bagel::World::getComponent<Velocity>(ent);
 
@@ -51,9 +51,9 @@ namespace breakout {
             pos.y += vel.dy;
 
             // Reflect from left/right walls
-            if (pos.x < 0 || pos.x > SCREEN_WIDTH) {
+            if (pos.x < 0 || pos.x + collider.width > SCREEN_WIDTH) {
                 std::cout << "Entity " << id << " hit horizontal wall\n";
-                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH);
+                pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH - collider.width);
                 vel.dx *= -1;
             }
 
@@ -117,7 +117,6 @@ namespace breakout {
                         bagel::World::addComponent<BreakAnimation>(e2, {0.1});
 
                     }
-
                     break;
                 }
 
@@ -169,7 +168,8 @@ namespace breakout {
             if (keys[control.keyRight]) {
                 pos.x += speed;
             }
-            pos.x = std::clamp(pos.x, 0.0f, 800.0f - 161.0f); // הוספתי- שהמחבט לא יצא מהמסך
+            // Reflect from left/right walls
+            pos.x = std::clamp(pos.x, 0.0f, 800.0f - (161.0f * 0.7f));
         }
 
     }
@@ -238,7 +238,7 @@ namespace breakout {
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{400.0f, 450.0f};
-        Velocity vel{1.2f, -1.5f};
+        Velocity vel{1.2f, 1.5f};
         Sprite sprite{SpriteID::BALL};
         Collider collider{10.0f, 10.0f};
         BallTag tag;
@@ -278,7 +278,7 @@ namespace breakout {
      */
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
-        Position pos{320.0f, 560.0f};// Near bottom
+        Position pos{320.0f, 560.0f};
         Sprite sprite{SpriteID::PADDLE};
         Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
         PaddleControl control{left, right};
