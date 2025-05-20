@@ -105,6 +105,7 @@ namespace breakout {
 
     struct BreakAnimation {
         float timer = 0.0f; //seconds
+        float duration = 0.5f; // default
     };
 
     //----------------------------------

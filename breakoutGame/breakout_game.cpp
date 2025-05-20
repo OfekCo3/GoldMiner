@@ -85,11 +85,11 @@ namespace breakout {
         for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
             bagel::ent_type e1{id1};
             if (!bagel::World::mask(e1).test(requiredMask)) continue;
-            // We only want e1 to be the ball
             if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
 
             for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
                 if (id1 == id2) continue;
+
                 bagel::ent_type e2{id2};
                 if (!bagel::World::mask(e2).test(requiredMask)) continue;
                 if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
@@ -101,26 +101,35 @@ namespace breakout {
 
                 if (!isColliding(p1, c1, p2, c2)) continue;
 
-                // Ball hits a brick
+                // --- Collision with Brick ---
                 if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
                     auto& brick = bagel::World::getComponent<BrickHealth>(e2);
-                    std::cout << "Ball hit brick! Remaining hits: " << brick.hits << "\n";
+
+                    // Prevent hitting already broken bricks
+                    if (brick.hits <= 0) continue;
+
+                    std::cout << "Ball hit brick! Entity: " << e2.id
+                              << ", Remaining hits: " << brick.hits << "\n";
+
                     brick.hits--;
+
                     auto& vel = bagel::World::getComponent<Velocity>(e1);
-                    vel.dy *= -1;
+                    vel.dy *= -1; // Invert vertical direction
 
                     if (brick.hits <= 0) {
+                        // Change sprite to broken version
                         auto& sprite = bagel::World::getComponent<Sprite>(e2);
                         sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
-                        bagel::World::addComponent<BreakAnimation>(e2, {0.1});
 
+                        // Start break animation only if not already active
+                        if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
+                            bagel::World::addComponent<BreakAnimation>(e2, {0.0f, 0.5f});
+                        }
                     }
-                    break;
+                    break; // One collision per frame
                 }
 
-
-
-                // Ball hits paddle → reverse vertical direction
+                    // --- Collision with Paddle ---
                 else if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
                     std::cout << "Ball hit paddle! Inverting Y velocity.\n";
                     auto& vel = bagel::World::getComponent<Velocity>(e1);
@@ -128,7 +137,7 @@ namespace breakout {
                     break;
                 }
 
-                // Ball hits floor → (later: reduce life count)
+                    // --- Collision with Floor ---
                 else if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
                     std::cout << "Ball hit the floor!\n";
                     bagel::World::addComponent<DestroyedTag>(e1, {});
@@ -197,11 +206,17 @@ namespace breakout {
         bagel::Mask required;
         required.set(bagel::Component<DestroyedTag>::Bit);
 
+        std::vector<bagel::ent_type> toDestroy;
+
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (!bagel::World::mask(ent).test(required)) continue;
+            if (bagel::World::mask(ent).test(required)) {
+                toDestroy.push_back(ent);
+            }
+        }
 
-            std::cout << "Destroying entity: " << id << "\n";
+        for (auto ent : toDestroy) {
+            std::cout << "Destroying entity: " << ent.id << "\n";
             bagel::World::destroyEntity(ent);
         }
     }
@@ -357,7 +372,6 @@ namespace breakout {
             MovementSystem();       // Moves ball
             CollisionSystem();      // Handles ball collisions
             PowerUpSystem();        // Future logic
-            DestroySystem();        // Removes destroyed entities
 
             World::step();          // Apply component changes
 
@@ -372,6 +386,10 @@ namespace breakout {
             // Frame limiter (~60 FPS)
             Uint32 frameTime = SDL_GetTicks() - frameStart;
             if (frameTime < 16) SDL_Delay(16 - frameTime);
+
+            float deltaTime = frameTime / 1000.0f;
+            BreakAnimationSystem(deltaTime);
+            DestroySystem();        // Removes destroyed entities
         }
     }
 
@@ -447,9 +465,8 @@ namespace breakout {
             auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
             anim.timer += deltaTime;
 
-            if (anim.timer >= 1.0f) {
+            if (anim.timer >= anim.duration) {
                 bagel::World::addComponent<DestroyedTag>(entity, {});
-
             }
         }
     }

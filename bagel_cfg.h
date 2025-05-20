@@ -9,9 +9,9 @@ constexpr Bagel Params{
 
 BAGEL_STORAGE(breakout::Position, PackedStorage)
 BAGEL_STORAGE(breakout::Velocity, PackedStorage)
-BAGEL_STORAGE(breakout::Sprite, PackedStorage)
+BAGEL_STORAGE(breakout::Sprite, SparseStorage)
 BAGEL_STORAGE(breakout::Collider, PackedStorage)
-BAGEL_STORAGE(breakout::BrickHealth, PackedStorage)
+BAGEL_STORAGE(breakout::BrickHealth, SparseStorage)
 BAGEL_STORAGE(breakout::PaddleControl, PackedStorage)
 BAGEL_STORAGE(breakout::PowerUpType, PackedStorage)
 BAGEL_STORAGE(breakout::TimedEffect, PackedStorage)
