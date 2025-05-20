@@ -123,7 +123,7 @@ namespace breakout {
 
                         // Start break animation only if not already active
                         if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
-                            bagel::World::addComponent<BreakAnimation>(e2, {0.0f, 0.5f});
+                            bagel::World::addComponent<BreakAnimation>(e2, {0.5f}); // half a second animation
                         }
                     }
                     break; // One collision per frame
@@ -465,8 +465,9 @@ namespace breakout {
             auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
             anim.timer += deltaTime;
 
-            if (anim.timer >= anim.duration) {
+            if (anim.timer >= 1.0f) {
                 bagel::World::addComponent<DestroyedTag>(entity, {});
+
             }
         }
     }
