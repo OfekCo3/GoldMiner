@@ -33,8 +33,9 @@ namespace breakout {
         BRICK_ORANGE = 8,
         BRICK_ORANGE_DMG = 9,
         LASER = 10,
-        STAR = 11
-
+        STAR = 11,
+        HEART = 12,
+        EXPEND_PADDLE = 13,
     };
 
     //----------------------------------
