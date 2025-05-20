@@ -4,17 +4,12 @@
  *
  * This module defines the game components, systems, and entity creation functions
  * according to the Entity-Component-System (ECS) model, implemented using BAGEL.
- * All functions and structures are documented with Doxygen-style comments
- * to support understanding and future development.
  */
 #ifndef BREAKOUT_GAME_H
 #define BREAKOUT_GAME_H
 
 #include <cstdint>
-//#include "SDL3_image/SDL_image.h"
 #include "SDL3_image/SDL_image.h"
-
-
 
 namespace breakout {
 
@@ -37,24 +32,24 @@ namespace breakout {
         HEART = 12,
     };
 
+    /** @brief Types of power-ups available in the game. */
     enum class ePowerUpType {
         NONE = 0,
         SHOTING_LASER = 1,
         WIDE_PADDLE = 2,
     };
 
-
     //----------------------------------
-    // Components
+    /// @section Components
     //----------------------------------
 
-    /** @brief Position of an entity on the screen (X,Y coordinates) */
+    /** @brief Position of an entity on the screen (X,Y coordinates). */
     struct Position {
         float x = 0.0f; ///< Horizontal position
         float y = 0.0f; ///< Vertical position
     };
 
-    /** @brief Velocity vector defining movement direction and speed */
+    /** @brief Velocity vector defining movement direction and speed. */
     struct Velocity {
         float dx = 0.0f; ///< Horizontal speed
         float dy = 0.0f; ///< Vertical speed
@@ -65,106 +60,83 @@ namespace breakout {
         eSpriteID spriteID = eSpriteID::BALL;  ///< Which sprite to use when rendering
     };
 
-
-    /** @brief Collider for detecting collisions with other entities */
+    /** @brief Collider for detecting collisions with other entities. */
     struct Collider {
         float width = 0.0f;
         float height = 0.0f;
     };
 
-    /** @brief Tracks how many hits a brick can take before breaking */
+    /** @brief Tracks how many hits a brick can take before breaking. */
     struct BrickHealth {
         int hits = 1; ///< Number of remaining hits (1 by default)
     };
 
-    /** @brief Indicates paddle is controlled by player; includes control keys */
+    /** @brief Indicates paddle is controlled by player; includes control keys. */
     struct PaddleControl {
-        int keyLeft = -1;  ///< Key code to move left
-        int keyRight = -1; ///< Key code to move right
+        int keyLeft = SDL_SCANCODE_LEFT;  ///< Key code to move left
+        int keyRight = SDL_SCANCODE_RIGHT; ///< Key code to move right
     };
 
-    /** @brief Tag component to identify the ball */
+    /** @brief Tag component to identify the ball. */
     struct BallTag {};
 
-    /** @brief Type of power-up available or collected */
+    /** @brief Type of power-up available or collected. */
     struct PowerUpType {
-        ePowerUpType powerUp= ePowerUpType::NONE;
+        ePowerUpType powerUp = ePowerUpType::NONE;
     };
 
-    /** @brief Temporary effect applied to the entity, with duration */
+    /** @brief Temporary effect applied to the entity, with duration. */
     struct TimedEffect {
         float remaining = 0.0f; ///< Remaining time for power-up
     };
 
-    /** @brief Number of lives remaining for the player */
-    struct LifeCount {
-        int lives = 3; ///< Default lives count
-    };
-
-    /** @brief Current score accumulated by the player */
-    struct Score {
-        int points = 0; ///< Score value
-    };
-
-    /** @brief Marks an entity to be removed from the game */
+    /** @brief Marks an entity to be removed from the game. */
     struct DestroyedTag {};
 
-    /** @brief Tag component to mark the floor */
+    /** @brief Tag component to mark the floor. */
     struct FloorTag {};
 
+    /** @brief Component used to animate a brick before it's destroyed. */
     struct BreakAnimation {
-        float timer = 0.0f; //seconds
+        float timer = 0.0f; ///< Countdown before removal (in seconds)
     };
 
-    /** @brief Tag for star power-up */
+    /** @brief Tag for star power-up. */
     struct StarPowerTag {};
 
-    /** @brief Tag for heart power-up */
+    /** @brief Tag for heart power-up. */
     struct HeartPowerTag {};
 
-
-    /** @brief Tag to identify laser entities */
+    /** @brief Tag to identify laser entities. */
     struct LaserTag {};
 
-
-
-
     //----------------------------------
-    // Systems (declarations only)
+    /// @section Systems (declarations only)
     //----------------------------------
 
-    /**
-     * @brief Updates entity positions based on velocity components.
-     */
+    /** @brief Updates entity positions based on velocity components. */
     void MovementSystem();
 
-    /**
-     * @brief Handles collisions between entities and triggers side effects.
-     */
+    /** @brief Handles collisions between entities and triggers side effects. */
     void CollisionSystem();
 
-    /**
-     * @brief Handles player input and updates paddle position accordingly.
-     */
+    /** @brief Handles player input and updates paddle position accordingly. */
     void PlayerControlSystem();
 
     /**
      * @brief Activates power-up logic and tracks timed effects.
+     *
+     * @param deltaTime Time elapsed since last frame.
      */
     void PowerUpSystem(float deltaTime);
 
-
-    /**
-     * @brief Removes entities marked with DestroyedTag.
-     */
+    /** @brief Removes entities marked with DestroyedTag. */
     void DestroySystem();
 
-    /**
-     * @brief Displays game information (score, lives, etc.) to the user.
-     */
+    /** @brief Displays game information (score, lives, etc.) to the user. */
     void UISystem();
 
-     /**
+    /**
      * @brief Renders all entities that have both Position and Sprite components.
      *
      * @param ren The SDL renderer to use.
@@ -172,23 +144,32 @@ namespace breakout {
      */
     void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex);
 
+    /**
+     * @brief Handles the animation of bricks breaking over time.
+     *
+     * @param deltaTime Time elapsed since last frame.
+     */
     void BreakAnimationSystem(float deltaTime);
 
+    /**
+     * @brief Handles logic when a star power-up is active.
+     *
+     * @param deltaTime Time elapsed since last frame.
+     */
     void StarSystem(float deltaTime);
 
-
     //----------------------------------
-    // Entity creation functions
+    /// @section Entity creation functions
     //----------------------------------
 
-    /**
-     * @brief Creates a ball entity with required components.
-     * @return The unique ID of the created entity.
+    /** @brief Creates a ball entity with required components.
+     *  @return The unique ID of the created entity.
      */
-    int CreateBall();
+    id_type CreateBall();
 
     /**
      * @brief Creates a brick entity with specific health, sprite color, and position.
+     *
      * @param health Number of hits until the brick breaks.
      * @param color eSpriteID enum value to determine brick color.
      * @param x Horizontal position of the brick.
@@ -197,9 +178,9 @@ namespace breakout {
      */
     id_type CreateBrick(int health, eSpriteID color, float x, float y);
 
-
     /**
      * @brief Creates a paddle controlled by the player.
+     *
      * @param left Key code for moving left.
      * @param right Key code for moving right.
      * @return The unique ID of the created entity.
@@ -208,25 +189,27 @@ namespace breakout {
 
     /**
      * @brief Creates a falling power-up with a specified type.
+     *
      * @param type Power-up type identifier.
      * @return The unique ID of the created entity.
      */
-     id_type CreatePowerUp(int type);
+    id_type CreatePowerUp(int type);
 
     /**
-     * @brief Creates a static UI manager to track score and lives.
+     * @brief Creates a floor entity that detects when the ball falls below.
+     *
      * @return The unique ID of the created entity.
      */
-     id_type CreateUIManager();
-
-
-     void run(SDL_Renderer* ren, SDL_Texture* tex);
+    id_type CreateFloor();
 
     /**
-    * @brief Creates a floor entity that detects when the ball falls below.
-    * @return The unique ID of the created entity.
-    */
-    id_type CreateFloor();
+     * @brief Creates a star power-up entity at the specified position.
+     *
+     * @param x Horizontal position.
+     * @param y Vertical position.
+     * @return The unique ID of the created star entity.
+     */
+    id_type CreateStar(float x, float y);
 
     /**
      * @brief Creates a full grid of bricks arranged in rows and columns.
@@ -237,11 +220,31 @@ namespace breakout {
      */
     void CreateBrickGrid(int rows, int cols, int health);
 
-    id_type CreateStar(float x, float y);
-
+    /**
+     * @brief Creates a heart power-up entity at the specified position.
+     *
+     * @param x Horizontal position.
+     * @param y Vertical position.
+     * @return The unique ID of the created heart entity.
+     */
     id_type CreateHeart(float x, float y);
 
+    /**
+     * @brief Creates a laser entity at the specified position.
+     *
+     * @param x Horizontal position.
+     * @param y Vertical position.
+     * @return The unique ID of the created laser entity.
+     */
     id_type CreateLaser(float x, float y);
+
+    /**
+     * @brief Runs the main game loop or core execution logic.
+     *
+     * @param ren The SDL renderer.
+     * @param tex The texture sheet.
+     */
+    void run(SDL_Renderer* ren, SDL_Texture* tex);
 
 } // namespace breakout
 
