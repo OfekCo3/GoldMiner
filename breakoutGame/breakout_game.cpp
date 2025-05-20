@@ -138,16 +138,12 @@ void CollisionSystem() {
                 if (brick.hits <= 0) continue;
                 brick.hits--;
 
-                if (!bagel::World::mask(e1).test(bagel::Component<DestroyedTag>::Bit)) {
-                    bagel::World::addComponent(e1, breakout::DestroyedTag{});
-                }
-
                 if (brick.hits <= 0) {
                     auto& sprite = bagel::World::getComponent<Sprite>(e2);
                     sprite.spriteID = static_cast<SpriteID>(static_cast<int>(sprite.spriteID) + 1);
 
                     if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
-                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.0f});
+                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
                     }
                 }
 
@@ -224,7 +220,7 @@ void CollisionSystem() {
                     bagel::ent_type paddle{pid};
                     if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
                         bagel::World::addComponent(paddle, breakout::PowerUpType{1});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{3.0f});
                         break;
                     }
                 }
@@ -577,7 +573,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
         {SpriteID::BRICK_ORANGE,    {17, 319, 175, 57}},
         {SpriteID::BRICK_ORANGE_DMG,{206, 318, 175, 58}},
         {SpriteID::LASER,           {837, 643, 11, 22}},
-           {SpriteID::STAR, {798, 372, 84, 73}}
+           {SpriteID::STAR,              {798, 372, 84, 73}}
 
     };
 
@@ -633,7 +629,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                 SpriteID color = static_cast<SpriteID>(2 + (row % 4) * 2); // Choose color by row
 
                 // Place a static star in the middle of the top row
-                if (row == 3 && col == cols / 2) {
+                if (row == 2 && col == cols / 2) {
                     CreateStar(x, y); // This star does not fall – no velocity
                 } else {
                     CreateBrick(health, color, x, y);
