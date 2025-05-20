@@ -297,9 +297,11 @@ namespace breakout {
         Sprite sprite{SpriteID::PADDLE};
         Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
         PaddleControl control{left, right};
-
         e.addAll(pos, sprite, collider, control);
+        bagel:: Mask maskkkk = bagel::World::mask(e.entity());
+        bool b =  maskkkk.test(bagel::Component<Position>::Bit);
         return e.entity().id;
+
     }
 
     /**
