@@ -42,22 +42,20 @@ namespace breakout {
         for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (!bagel::World::mask(ent).test(required)) continue;
-            auto& collider = bagel::World::getComponent<Collider>(ent);
+
             auto& pos = bagel::World::getComponent<Position>(ent);
             auto& vel = bagel::World::getComponent<Velocity>(ent);
+            auto& collider = bagel::World::getComponent<Collider>(ent);
 
-            // Apply velocity to position
             pos.x += vel.dx;
             pos.y += vel.dy;
 
-            // Reflect from left/right walls
             if (pos.x < 0 || pos.x + collider.width > SCREEN_WIDTH) {
                 std::cout << "Entity " << id << " hit horizontal wall\n";
                 pos.x = std::clamp(pos.x, 0.0f, SCREEN_WIDTH - collider.width);
                 vel.dx *= -1;
             }
 
-            // Reflect from top wall only (bottom is handled by FloorTag in CollisionSystem)
             if (pos.y < 0) {
                 std::cout << "Entity " << id << " hit top wall\n";
                 pos.y = 0;
@@ -240,7 +238,9 @@ namespace breakout {
         Position pos{400.0f, 450.0f};
         Velocity vel{1.2f, 1.5f};
         Sprite sprite{SpriteID::BALL};
-        Collider collider{10.0f, 10.0f};
+        float spriteW = 87.0f * 0.4f;
+        float spriteH = 77.0f * 0.4f;
+        Collider collider{spriteW, spriteH};
         BallTag tag;
 
         e.addAll(pos, vel, sprite, collider, tag);
