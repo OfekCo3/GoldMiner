@@ -273,7 +273,10 @@ namespace bagel
 		static const Mask& mask(ent_type e) {
 			return _masks[e.id];
 		}
-		static ent_type maxId() { return _maxId; }
+        static Mask& maskMutable(ent_type e) {
+            return _masks[e.id];
+        }
+        static ent_type maxId() { return _maxId; }
 
 		template <class T>
 		static T& getComponent(ent_type e) {
