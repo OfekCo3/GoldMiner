@@ -13,6 +13,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <box2d/box2d.h>
 
 namespace std {
     template <>
@@ -24,6 +25,14 @@ namespace std {
 }
 
 namespace breakout {
+
+    b2WorldId boxWorld = b2_nullWorldId;
+
+    void PrepareBoxWorld() {
+        b2WorldDef def = b2DefaultWorldDef();
+        def.gravity = {0.0f, 0.0f};
+        boxWorld = b2CreateWorld(&def);
+    }
 
     //----------------------------------
     // System Implementations
@@ -235,39 +244,83 @@ void CollisionSystem() {
     }
 }
 
-
     /**
      * @brief Reads player input and updates paddle position accordingly.
      */
     void PlayerControlSystem() {
-        bagel::Mask required;
-        required.set(bagel::Component<Position>::Bit);
-        required.set(bagel::Component<PaddleControl>::Bit);
+        constexpr float SCREEN_WIDTH = 800.0f;
+        constexpr float PADDLE_WIDTH = 161.0f * 0.7f;
+        constexpr float MAX_SPEED = 20.0f;
 
-        // Poll keyboard state
+        bagel::Mask mask;
+        mask.set(bagel::Component<PaddleControl>::Bit);
+        mask.set(bagel::Component<PhysicsBody>::Bit);
+        mask.set(bagel::Component<Collider>::Bit);
+
         SDL_PumpEvents();
-        int numKeys = 0;
-        const bool* keys = SDL_GetKeyboardState(&numKeys);
+        const bool* keys = SDL_GetKeyboardState(nullptr);
 
-        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+        for (id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
-            if (!bagel::World::mask(ent).test(required)) continue;
+            if (!bagel::World::mask(ent).test(mask)) continue;
 
-            auto& pos = bagel::World::getComponent<Position>(ent);
             const auto& control = bagel::World::getComponent<PaddleControl>(ent);
+            auto& phys = bagel::World::getComponent<PhysicsBody>(ent);
+            auto& col = bagel::World::getComponent<Collider>(ent);
 
-            const float speed = 5.0f;
+            if (!b2Body_IsValid(phys.body)) continue;
 
-            if (keys[control.keyLeft]) {
-                pos.x -= speed;
+            float vx = 0.0f;
+            if (keys[control.keyLeft])  vx -= MAX_SPEED;
+            if (keys[control.keyRight]) vx += MAX_SPEED;
+
+            b2Vec2 pos = b2Body_GetPosition(phys.body);
+            float halfWidth = col.width / 2.0f / 10.0f;
+            float minX = halfWidth;
+            float maxX = (SCREEN_WIDTH / 10.0f) - halfWidth;
+
+            if ((pos.x <= minX && vx < 0) || (pos.x >= maxX && vx > 0)) {
+                vx = 0.0f;
             }
-            if (keys[control.keyRight]) {
-                pos.x += speed;
-            }
-            // Reflect from left/right walls
-            pos.x = std::clamp(pos.x, 0.0f, 800.0f - (161.0f * 0.7f));
+
+            b2Vec2 newVel = {vx, 0.0f};
+            b2Body_SetLinearVelocity(phys.body, newVel);
         }
+    }
 
+    /**
+    * @brief For each entity with PhysicsBody + Position, sync the position from Box2D.
+    */
+    void PhysicsSystem(float deltaTime) {
+        using namespace bagel;
+
+        constexpr float BOX_STEP = 1.0f / 60.0f;
+
+        // Step the Box2D world
+        b2World_Step(boxWorld, BOX_STEP, 8);
+
+        bagel::Mask mask;
+        mask.set(Component<PhysicsBody>::Bit);
+        mask.set(Component<Position>::Bit);
+
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type ent{id};
+
+            if (!World::mask(ent).test(mask)) continue;
+
+            auto& phys = World::getComponent<PhysicsBody>(ent);
+            auto& pos = World::getComponent<Position>(ent);
+
+            // Safety check
+            if (!b2Body_IsValid(phys.body)) continue;
+
+            // Get transform from Box2D
+            b2Transform t = b2Body_GetTransform(phys.body);
+
+            // Convert from meters to pixels (scale = 10)
+            pos.x = t.p.x * 10.0f;
+            pos.y = t.p.y * 10.0f;
+        }
     }
 
     /**
@@ -327,10 +380,6 @@ void PowerUpSystem(float deltaTime) {
         }
     }
 }
-
-
-
-
 
     /**
  * @brief Removes entities that are marked for deletion using the DestroyedTag component.
@@ -393,14 +442,33 @@ void PowerUpSystem(float deltaTime) {
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{400.0f, 450.0f};
-        Velocity vel{1.2f, 1.5f};
         Sprite sprite{eSpriteID::BALL};
-        float spriteW = 87.0f * 0.4f;
-        float spriteH = 77.0f * 0.4f;
-        Collider collider{spriteW, spriteH};
-        BallTag tag;
+        Collider collider{87.0f * 0.4f, 77.0f * 0.4f};
 
-        e.addAll(pos, vel, sprite, collider, tag);
+                // Box2D body setup
+        b2BodyDef bodyDef = b2DefaultBodyDef();
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.fixedRotation = true;
+        bodyDef.position = {pos.x / 10.0f, pos.y / 10.0f};  // divide by scale
+        b2BodyId body = b2CreateBody(boxWorld, &bodyDef);
+
+
+        b2ShapeDef ballShapeDef = b2DefaultShapeDef();
+        ballShapeDef.enableSensorEvents = true;
+        ballShapeDef.density = 1;
+        ballShapeDef.material.friction = 0;
+        ballShapeDef.material.restitution = 1.1f;
+
+        b2Circle circle = {0, 0, (87.0f * 0.4f / 2.0f) / 10.0f}; // radius in meters
+        b2CreateCircleShape(body, &ballShapeDef, &circle);
+
+        b2Vec2 velocity = {10.0f, -15.0f};
+        b2Body_SetLinearVelocity(body, velocity);
+        b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
+
+        e.addAll(pos, sprite, collider, BallTag{}, PhysicsBody{body}
+        ); //without velocity
+
         return e.entity().id;
     }
 
@@ -413,12 +481,24 @@ void PowerUpSystem(float deltaTime) {
     id_type CreateBrick(int health, eSpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
 
-        e.addAll(
-            Position{x, y},
-            Sprite{color},
-            Collider{171.0f * 0.7f, 59.0f * 0.7f},
-            BrickHealth{health}
-        );
+        Collider collider{171.0f * 0.7f, 59.0f * 0.7f};
+
+        // Box2D body
+        b2BodyDef def = b2DefaultBodyDef();
+        def.type = b2_staticBody;
+        def.position = {x / 10.0f, y / 10.0f};
+
+        b2BodyId body = b2CreateBody(boxWorld, &def);
+
+        b2ShapeDef shape = b2DefaultShapeDef();
+        shape.density = 1.0f;
+
+        b2Polygon box = b2MakeBox(collider.width / 2 / 10.0f, collider.height / 2 / 10.0f);
+        b2CreatePolygonShape(body, &shape, &box);
+
+        b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
+
+        e.addAll(Position{x, y}, Sprite{color}, collider, BrickHealth{health}, PhysicsBody{body});
 
         return e.entity().id;
     }
@@ -439,7 +519,23 @@ void PowerUpSystem(float deltaTime) {
         Sprite sprite{eSpriteID::PADDLE};
         Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
         PaddleControl control{left, right};
-        e.addAll(pos, sprite, collider, control);
+
+         // Box2D body
+         b2BodyDef def = b2DefaultBodyDef();
+         def.type = b2_kinematicBody;
+         def.position = {pos.x / 10.0f, pos.y / 10.0f};
+
+         b2BodyId body = b2CreateBody(boxWorld, &def);
+
+         b2ShapeDef shape = b2DefaultShapeDef();
+         shape.density = 1.0f;
+
+         b2Polygon box = b2MakeBox(collider.width / 2 / 10.0f, collider.height / 2 / 10.0f);
+         b2CreatePolygonShape(body, &shape, &box);
+
+         b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
+
+         e.addAll(pos, sprite, collider, control, PhysicsBody{body});
         return e.entity().id;
 
     }
@@ -504,6 +600,8 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
     using namespace bagel;
 
     // === Initialization ===
+    PrepareBoxWorld();
+
     CreateUIManager();
     CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
     CreateBall();
@@ -553,6 +651,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
         BreakAnimationSystem(deltaTime); // Animate broken bricks
         PowerUpSystem(deltaTime);        // Handle laser timer and shooting
+        PhysicsSystem(deltaTime);
         DestroySystem();                 // Remove entities with DestroyedTag
 
 

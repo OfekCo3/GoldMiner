@@ -11,10 +11,8 @@
 #define BREAKOUT_GAME_H
 
 #include <cstdint>
-//#include "SDL3_image/SDL_image.h"
 #include "SDL3_image/SDL_image.h"
-
-
+#include <box2d/box2d.h>
 
 namespace breakout {
 
@@ -123,10 +121,13 @@ namespace breakout {
     /** @brief Tag for heart power-up */
     struct HeartPowerTag {};
 
-
     /** @brief Tag to identify laser entities */
     struct LaserTag {};
 
+    /** @brief B2body information of the entity */
+    struct PhysicsBody {
+        b2BodyId body;
+    };
 
 
 
@@ -177,6 +178,7 @@ namespace breakout {
 
     void StarSystem(float deltaTime);
 
+    void PhysicsSystem(float deltaTime);
 
     //----------------------------------
     // Entity creation functions
