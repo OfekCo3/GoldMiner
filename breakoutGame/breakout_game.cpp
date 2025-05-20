@@ -22,7 +22,6 @@ namespace std {
     };
 }
 
-
 namespace breakout {
 
     //----------------------------------
@@ -234,7 +233,7 @@ namespace breakout {
         bagel::Entity e = bagel::Entity::create();
 
         Position pos{400.0f, 450.0f};             // Start near paddle
-        Velocity vel{1.2f, -1.5f};                // AMAL: Slower diagonal speed
+        Velocity vel{1.2f, -1.5f};
         Sprite sprite{SpriteID::BALL};
         Collider collider{12};
         BallTag tag;
@@ -242,8 +241,6 @@ namespace breakout {
         e.addAll(pos, vel, sprite, collider, tag);
         return e.entity().id;
     }
-
-
 
 
 
@@ -261,16 +258,16 @@ namespace breakout {
         return e.entity().id;
     }
 
-    /**
- * @brief Creates a paddle entity with position, sprite, collision, and input controls.
- *
- * The paddle is placed near the bottom of the screen with a default sprite and
- * a collider for ball interaction. It responds to the provided keyboard keys.
- *
- * @param left Key code (SDL_Scancode) for moving left
- * @param right Key code (SDL_Scancode) for moving right
- * @return Unique entity ID
- */
+     /**
+     * @brief Creates a paddle entity with position, sprite, collision, and input controls.
+     *
+     * The paddle is placed near the bottom of the screen with a default sprite and
+     * a collider for ball interaction. It responds to the provided keyboard keys.
+     *
+     * @param left Key code (SDL_Scancode) for moving left
+     * @param right Key code (SDL_Scancode) for moving right
+     * @return Unique entity ID
+     */
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
 
@@ -406,8 +403,8 @@ namespace breakout {
                 auto it = SPRITE_ATLAS.find(sprite.spriteID);
                 if (it != SPRITE_ATLAS.end()) {
                     const SDL_FRect& src = it->second;
-                    dst.w = src.w;
-                    dst.h = src.h;
+                    dst.w = src.w * 0.7f;  // scale down width
+                    dst.h = src.h * 0.7f;  // scale down height
                     SDL_RenderTexture(ren, tex, &src, &dst);
                 }
             }
@@ -444,8 +441,8 @@ namespace breakout {
     }*/
 
     void CreateBrickGrid(int rows, int cols, int health) {
-        const float brickW = 120.0f, brickH = 30.0f;
-        const float spacingX = 10.0f, spacingY = 10.0f;
+        const float brickW = 120.0f, brickH = 40.0f;
+        const float spacingX = 5.0f, spacingY = 5.0f;
         float totalWidth = cols * brickW + (cols - 1) * spacingX;
         float startX = (800.0f - totalWidth) / 2.0f;
         float startY = 80.0f;
