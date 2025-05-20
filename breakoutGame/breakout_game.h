@@ -11,6 +11,7 @@
 #define BREAKOUT_GAME_H
 
 #include <cstdint>
+//#include "SDL3_image/SDL_image.h"
 #include "SDL3_image/SDL_image.h"
 
 
@@ -18,6 +19,22 @@
 namespace breakout {
 
     using id_type = int;
+
+    /** @brief Enum representing all possible sprite types in the game. */
+    enum class SpriteID {
+        BALL = 0,
+        PADDLE = 1,
+        BRICK_BLUE = 2,
+        BRICK_BLUE_DMG = 3,
+        BRICK_PURPLE = 4,
+        BRICK_PURPLE_DMG = 5,
+        BRICK_YELLOW = 6,
+        BRICK_YELLOW_DMG = 7,
+        BRICK_ORANGE = 8,
+        BRICK_ORANGE_DMG = 9,
+        LASER = 10
+    };
+
 
     //----------------------------------
     // Components
@@ -35,10 +52,11 @@ namespace breakout {
         float dy = 0.0f; ///< Vertical speed
     };
 
-    /** @brief Graphical representation (sprite ID) */
+    /** @brief Graphical representation of the entity. Uses sprite ID from SpriteID enum. */
     struct Sprite {
-        int spriteID = -1; ///< Placeholder ID for graphics (can be replaced with actual sprite reference)
+        SpriteID spriteID = SpriteID::BALL;  ///< Which sprite to use when rendering
     };
+
 
     /** @brief Collider for detecting collisions with other entities */
     struct Collider {
@@ -118,6 +136,15 @@ namespace breakout {
      */
     void UISystem();
 
+     /**
+     * @brief Renders all entities that have both Position and Sprite components.
+     *
+     * @param ren The SDL renderer to use.
+     * @param tex The texture sheet containing all sprites.
+     */
+    void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex);
+
+
     //----------------------------------
     // Entity creation functions
     //----------------------------------
@@ -128,12 +155,16 @@ namespace breakout {
      */
     int CreateBall();
 
-    /**
-     * @brief Creates a brick entity with specified durability.
+        /**
+     * @brief Creates a brick entity with specific health, sprite color, and position.
      * @param health Number of hits until the brick breaks.
+     * @param color SpriteID enum value to determine brick color.
+     * @param x Horizontal position of the brick.
+     * @param y Vertical position of the brick.
      * @return The unique ID of the created entity.
      */
-    id_type CreateBrick(int health);
+    id_type CreateBrick(int health, SpriteID color, float x, float y);
+
 
     /**
      * @brief Creates a paddle controlled by the player.
@@ -156,6 +187,7 @@ namespace breakout {
      */
      id_type CreateUIManager();
 
+
      void run(SDL_Renderer* ren, SDL_Texture* tex);
 
     /**
@@ -163,6 +195,15 @@ namespace breakout {
     * @return The unique ID of the created entity.
     */
     id_type CreateFloor();
+
+        /**
+     * @brief Creates a full grid of bricks arranged in rows and columns.
+     *
+     * @param rows Number of brick rows.
+     * @param cols Number of bricks per row.
+     * @param health Health value assigned to each brick.
+     */
+    void CreateBrickGrid(int rows, int cols, int health);
 
 } // namespace breakout
 

@@ -11,6 +11,17 @@
 #include "../bagel.h"
 #include "SDL3_image/SDL_image.h"
 #include <iostream>
+#include <unordered_map>
+
+namespace std {
+    template <>
+    struct hash<breakout::SpriteID> {
+        size_t operator()(const breakout::SpriteID& s) const {
+            return hash<int>()(static_cast<int>(s));
+        }
+    };
+}
+
 
 namespace breakout {
 
@@ -146,7 +157,9 @@ namespace breakout {
             if (keys[control.keyRight]) {
                 pos.x += speed;
             }
+            pos.x = std::clamp(pos.x, 0.0f, 800.0f - 161.0f); // הוספתי- שהמחבט לא יצא מהמסך
         }
+
     }
 
     /**
@@ -203,38 +216,74 @@ namespace breakout {
     // Entity Creation Functions
     //----------------------------------
 
-    /**
-     * @brief Creates a new ball entity with basic motion and collision components.
-     * @return Unique entity ID
+        /**
+     * @brief Creates a new ball entity with motion, rendering, collision, and tagging.
+     *
+     * The ball is initialized at a fixed position with a velocity vector,
+     * a sprite for rendering, a circular collider, and a BallTag for identification.
+     *
+     * @return The unique entity ID of the created ball.
      */
+    /**
+ * @brief Creates a new ball entity with position, velocity, sprite, and collision.
+ *        The ball starts near the center of the screen and moves upward.
+ *
+ * @return Unique entity ID
+ */
     id_type CreateBall() {
         bagel::Entity e = bagel::Entity::create();
-        e.addAll(Position{}, Velocity{}, Sprite{}, Collider{}, BallTag{});
+
+        Position pos{400.0f, 450.0f};             // Start near paddle
+        Velocity vel{1.2f, -1.5f};                // AMAL: Slower diagonal speed
+        Sprite sprite{SpriteID::BALL};
+        Collider collider{12};
+        BallTag tag;
+
+        e.addAll(pos, vel, sprite, collider, tag);
         return e.entity().id;
     }
 
-    /**
-     * @brief Creates a brick entity with a specified amount of health.
-     * @param health Number of hits required to break the brick
-     * @return Unique entity ID
-     */
-    id_type CreateBrick(int health) {
+
+
+
+
+
+    id_type CreateBrick(int health, SpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
-        e.addAll(Position{}, Sprite{}, Collider{}, BrickHealth{health});
+
+        e.addAll(
+            Position{x, y},
+            Sprite{color},
+            Collider{10},        //fix r
+            BrickHealth{health}
+        );
+
         return e.entity().id;
     }
 
     /**
-     * @brief Creates a paddle entity with assigned movement key controls.
-     * @param left Key code for left movement
-     * @param right Key code for right movement
-     * @return Unique entity ID
-     */
+ * @brief Creates a paddle entity with position, sprite, collision, and input controls.
+ *
+ * The paddle is placed near the bottom of the screen with a default sprite and
+ * a collider for ball interaction. It responds to the provided keyboard keys.
+ *
+ * @param left Key code (SDL_Scancode) for moving left
+ * @param right Key code (SDL_Scancode) for moving right
+ * @return Unique entity ID
+ */
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
-        e.addAll(Position{}, Sprite{}, Collider{}, PaddleControl{left, right});
+
+        Position pos{340.0f, 560.0f};          // Near bottom
+        Sprite sprite{SpriteID::PADDLE};
+        Collider collider{80};                // Width ~ matches paddle image
+        PaddleControl control{left, right};
+
+        e.addAll(pos, sprite, collider, control);
         return e.entity().id;
     }
+
+
 
     /**
      * @brief Creates a falling power-up with a defined type and timed effect.
@@ -264,24 +313,24 @@ namespace breakout {
     }
 
     /**
-     * @brief Main game loop for the Breakout ECS-style game.
-     *
-     * Initializes entities, handles player input, updates systems,
-     * and renders all game entities with Position and Sprite components.
-     *
-     * @param ren SDL renderer for drawing.
-     * @param tex Texture sheet for all game sprites.
-     */
+  * @brief Main game loop for the Breakout ECS-style game.
+  *
+  * Initializes all core entities (UI, paddle, ball, bricks),
+  * runs input, system updates, and rendering each frame.
+  *
+  * @param ren SDL renderer for drawing.
+  * @param tex Texture sheet for all game sprites.
+  */
     void run(SDL_Renderer* ren, SDL_Texture* tex) {
         using namespace bagel;
 
-        // === Create initial entities ===
         CreateUIManager();
         CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
         CreateBall();
+        CreateFloor();
+        CreateBrickGrid(4, 6, 2); // 4 rows × 6 cols, health = 2
 
-        for (int i = 0; i < 10; ++i)
-            CreateBrick(1 + (i % 3));  // Bricks with different durability
+
 
         bool quit = false;
         SDL_Event e;
@@ -291,62 +340,128 @@ namespace breakout {
 
             // === Input handling ===
             SDL_PumpEvents();
-            const bool* keys = SDL_GetKeyboardState(nullptr);  // SDL3 returns bool*
 
             while (SDL_PollEvent(&e)) {
-                if (e.type == SDL_EVENT_QUIT)
+                if (e.type == SDL_EVENT_QUIT ||
+                    (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)) {
                     quit = true;
-                else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)
-                    quit = true;
+                    }
             }
 
-            // Move paddle based on keyboard input
-            for (bagel::id_type id = 0; id <= World::maxId().id; ++id) {
-                ent_type ent{id};
-                if (World::mask(ent).test(Component<PaddleControl>::Bit) &&
-                    World::mask(ent).test(Component<Position>::Bit)) {
+            // === System updates ===
+            PlayerControlSystem();  // Moves paddle
+            MovementSystem();       // Moves ball
+            CollisionSystem();      // Handles ball collisions
+            PowerUpSystem();        // Future logic
+            DestroySystem();        // Removes destroyed entities
 
-                    auto& pos = World::getComponent<Position>(ent);
-                    const auto& control = World::getComponent<PaddleControl>(ent);
-
-                    if (keys[control.keyLeft])  pos.x -= 5.0f;
-                    if (keys[control.keyRight]) pos.x += 5.0f;
-                }
-            }
-
-            // === System logic ===
-            MovementSystem();
-            CollisionSystem();
-            PowerUpSystem();
-            DestroySystem();
-
-            World::step();  // Clears internal state after changes
+            World::step();          // Apply component changes
 
             // === Rendering ===
             SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
             SDL_RenderClear(ren);
 
-            for (bagel::id_type id = 0; id <= World::maxId().id; ++id) {
-                ent_type ent{id};
-                if (World::mask(ent).test(Component<Position>::Bit) &&
-                    World::mask(ent).test(Component<Sprite>::Bit)) {
-
-                    const auto& pos = World::getComponent<Position>(ent);
-
-                    SDL_FRect dst = {pos.x, pos.y, 40, 40};  // Default size
-                    SDL_FRect src = {0, 0, 87, 77};          // Placeholder sprite from sheet
-
-                    SDL_RenderTexture(ren, tex, &src, &dst);
-                }
-            }
+            RenderSystem(ren, tex); // Uses SpriteID and Position
 
             SDL_RenderPresent(ren);
 
-            // Frame limiting
+            // Frame limiter (~60 FPS)
             Uint32 frameTime = SDL_GetTicks() - frameStart;
             if (frameTime < 16) SDL_Delay(16 - frameTime);
         }
     }
+
+
+
+
+    static const std::unordered_map<SpriteID, SDL_FRect> SPRITE_ATLAS = {
+        {SpriteID::BALL,            {800, 548, 87, 77}},
+        {SpriteID::PADDLE,          {392, 9, 161, 55}},
+        {SpriteID::BRICK_BLUE,      {21, 17, 171, 59}},
+        {SpriteID::BRICK_BLUE_DMG,  {209, 16, 171, 60}},
+        {SpriteID::BRICK_PURPLE,    {20, 169, 168, 57}},
+        {SpriteID::BRICK_PURPLE_DMG,{208, 168, 170, 58}},
+        {SpriteID::BRICK_YELLOW,    {20, 469, 169, 59}},
+        {SpriteID::BRICK_YELLOW_DMG,{210, 470, 166, 63}},
+        {SpriteID::BRICK_ORANGE,    {17, 319, 175, 57}},
+        {SpriteID::BRICK_ORANGE_DMG,{206, 318, 175, 58}},
+        {SpriteID::LASER,           {837, 643, 11, 22}}
+    };
+
+
+    void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex) {
+        using namespace bagel;
+
+        Mask required;
+        required.set(Component<Position>::Bit);
+        required.set(Component<Sprite>::Bit);
+
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type ent{id};
+            if (World::mask(ent).test(required)) {
+                const auto& pos = World::getComponent<Position>(ent);
+                const auto& sprite = World::getComponent<Sprite>(ent);
+
+                SDL_FRect dst = {pos.x, pos.y, 40, 40};  // default
+                auto it = SPRITE_ATLAS.find(sprite.spriteID);
+                if (it != SPRITE_ATLAS.end()) {
+                    const SDL_FRect& src = it->second;
+                    dst.w = src.w;
+                    dst.h = src.h;
+                    SDL_RenderTexture(ren, tex, &src, &dst);
+                }
+            }
+        }
+    }
+
+    /*void CreateBrickGrid(int rows, int cols, int health) {
+        const float brickW = 120.0f;
+        const float brickH = 30.0f;
+        const float spacingX = 10.0f;
+        const float spacingY = 10.0f;
+
+        float totalWidth = cols * brickW + (cols - 1) * spacingX;
+        float startX = (800.0f - totalWidth) / 2.0f;
+        float startY = 80.0f;
+
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                float x = startX + col * (brickW + spacingX);
+                float y = startY + row * (brickH + spacingY);
+
+                SpriteID color;
+                switch (row % 4) {
+                    case 0: color = SpriteID::BRICK_BLUE;   break;
+                    case 1: color = SpriteID::BRICK_PURPLE; break;
+                    case 2: color = SpriteID::BRICK_YELLOW; break;
+                    case 3: color = SpriteID::BRICK_ORANGE; break;
+                    default: color = SpriteID::BRICK_BLUE;  break;
+                }
+
+                CreateBrick(health, color, x, y);
+            }
+        }
+    }*/
+
+    void CreateBrickGrid(int rows, int cols, int health) {
+        const float brickW = 120.0f, brickH = 30.0f;
+        const float spacingX = 10.0f, spacingY = 10.0f;
+        float totalWidth = cols * brickW + (cols - 1) * spacingX;
+        float startX = (800.0f - totalWidth) / 2.0f;
+        float startY = 80.0f;
+
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                float x = startX + col * (brickW + spacingX);
+                float y = startY + row * (brickH + spacingY);
+                SpriteID color = static_cast<SpriteID>(2 + (row % 4) * 2); // AMAL: BRICK_* enums
+                CreateBrick(health, color, x, y);
+            }
+        }
+    }
+
+
+
 
 
 }
