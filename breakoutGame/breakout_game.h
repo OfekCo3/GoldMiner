@@ -35,7 +35,6 @@ namespace breakout {
         LASER = 10,
         STAR = 11,
         HEART = 12,
-        EXPEND_PADDLE = 13,
     };
 
     enum class ePowerUpType {
