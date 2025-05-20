@@ -67,11 +67,12 @@ namespace breakout {
     }
 
     bool isColliding(const Position& a, const Collider& ca, const Position& b, const Collider& cb) {
-        float dx = a.x - b.x;
-        float dy = a.y - b.y;
-        float distSq = dx * dx + dy * dy;
-        float radiusSum = ca.radius + cb.radius;
-        return distSq <= radiusSum * radiusSum;
+        return (
+                a.x < b.x + cb.width &&
+                a.x + ca.width > b.x &&
+                a.y < b.y + cb.height &&
+                a.y + ca.height > b.y
+        );
     }
 
     /**
@@ -86,7 +87,6 @@ namespace breakout {
         for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
             bagel::ent_type e1{id1};
             if (!bagel::World::mask(e1).test(requiredMask)) continue;
-
             // We only want e1 to be the ball
             if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
 
@@ -94,6 +94,7 @@ namespace breakout {
                 if (id1 == id2) continue;
                 bagel::ent_type e2{id2};
                 if (!bagel::World::mask(e2).test(requiredMask)) continue;
+                if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
 
                 auto& p1 = bagel::World::getComponent<Position>(e1);
                 auto& c1 = bagel::World::getComponent<Collider>(e1);
@@ -107,22 +108,29 @@ namespace breakout {
                     auto& brick = bagel::World::getComponent<BrickHealth>(e2);
                     std::cout << "Ball hit brick! Remaining hits: " << brick.hits << "\n";
                     brick.hits--;
+                    auto& vel = bagel::World::getComponent<Velocity>(e1);
+                    vel.dy *= -1;
+
                     if (brick.hits <= 0) {
                         bagel::World::addComponent<DestroyedTag>(e2, {});
                     }
+                    break;
                 }
+
 
                 // Ball hits paddle → reverse vertical direction
                 else if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
                     std::cout << "Ball hit paddle! Inverting Y velocity.\n";
                     auto& vel = bagel::World::getComponent<Velocity>(e1);
                     vel.dy *= -1;
+                    break;
                 }
 
                 // Ball hits floor → (later: reduce life count)
                 else if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
                     std::cout << "Ball hit the floor!\n";
                     bagel::World::addComponent<DestroyedTag>(e1, {});
+                    break;
                 }
             }
         }
@@ -235,7 +243,7 @@ namespace breakout {
         Position pos{400.0f, 450.0f};             // Start near paddle
         Velocity vel{1.2f, -1.5f};
         Sprite sprite{SpriteID::BALL};
-        Collider collider{12};
+        Collider collider{24.0f, 24.0f};
         BallTag tag;
 
         e.addAll(pos, vel, sprite, collider, tag);
@@ -251,7 +259,7 @@ namespace breakout {
         e.addAll(
             Position{x, y},
             Sprite{color},
-            Collider{10},        //fix r
+            Collider{171.0f, 59.0f},
             BrickHealth{health}
         );
 
@@ -271,9 +279,9 @@ namespace breakout {
     id_type CreatePaddle(int left, int right) {
         bagel::Entity e = bagel::Entity::create();
 
-        Position pos{340.0f, 560.0f};          // Near bottom
+        Position pos{320.0f, 560.0f};          // Near bottom
         Sprite sprite{SpriteID::PADDLE};
-        Collider collider{80};                // Width ~ matches paddle image
+        Collider collider{161.0f, 55.0f};                // Width ~ matches paddle image
         PaddleControl control{left, right};
 
         e.addAll(pos, sprite, collider, control);
@@ -305,7 +313,7 @@ namespace breakout {
 
     id_type CreateFloor() {
         bagel::Entity e = bagel::Entity::create();
-        e.addAll(Position{400.0f, 590.0f}, Collider{1000}, FloorTag{});
+        e.addAll(Position{0.0f, 590.0f}, Collider{800.0f, 10.0f}, FloorTag{});
         return e.entity().id;
     }
 
@@ -325,7 +333,7 @@ namespace breakout {
         CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
         CreateBall();
         CreateFloor();
-        CreateBrickGrid(4, 6, 2); // 4 rows × 6 cols, health = 2
+        CreateBrickGrid(4, 6, 1); // 4 rows × 6 cols, health = 2
 
 
 
