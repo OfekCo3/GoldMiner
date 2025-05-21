@@ -11,6 +11,8 @@
 #include <cstdint>
 #include "SDL3_image/SDL_image.h"
 #include <box2d/box2d.h>
+#include <unordered_map>
+
 namespace breakout {
 
     using id_type = int;
@@ -138,9 +140,6 @@ namespace breakout {
     /** @brief Removes entities marked with DestroyedTag. */
     void DestroySystem();
 
-    /** @brief Displays game information (score, lives, etc.) to the user. */
-    void UISystem();
-
     /**
      * @brief Renders all entities that have both Position and Sprite components.
      *
@@ -155,13 +154,6 @@ namespace breakout {
      * @param deltaTime Time elapsed since last frame.
      */
     void BreakAnimationSystem(float deltaTime);
-
-    /**
-     * @brief Handles logic when a star power-up is active.
-     *
-     * @param deltaTime Time elapsed since last frame.
-     */
-    void StarSystem(float deltaTime);
 
     //----------------------------------
     /// @section Entity creation functions
@@ -193,14 +185,6 @@ namespace breakout {
     id_type CreatePaddle(int left, int right);
 
     /**
-     * @brief Creates a falling power-up with a specified type.
-     *
-     * @param type Power-up type identifier.
-     * @return The unique ID of the created entity.
-     */
-    id_type CreatePowerUp(int type);
-
-    /**
      * @brief Creates a floor entity that detects when the ball falls below.
      *
      * @return The unique ID of the created entity.
@@ -218,6 +202,7 @@ namespace breakout {
 
     /**
      * @brief Creates a full grid of bricks arranged in rows and columns.
+     * the bricks grid contains superpower - objects.
      *
      * @param rows Number of brick rows.
      * @param cols Number of bricks per row.
