@@ -17,3 +17,8 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 build/
+
+# Ignore Doxygen output
+docs/
+html/
+latex/
