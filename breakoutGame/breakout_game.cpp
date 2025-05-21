@@ -807,6 +807,16 @@ namespace breakout {
         b2CreatePolygonShape(right, &shapeDef, &rightBox);
     }
 
+    /**
+     * @brief Creates a star power-up entity at the given position.
+     *
+     * The star grants the paddle a laser-shooting power-up when collected.
+     * It includes a position, sprite, collider, and a StarPowerTag to identify its type.
+     *
+     * @param x Horizontal position on the screen.
+     * @param y Vertical position on the screen.
+     * @return The unique ID of the created star entity.
+     */
     id_type CreateStar(float x, float y) {
         bagel::Entity e = bagel::Entity::create();
 
@@ -818,6 +828,16 @@ namespace breakout {
         return e.entity().id;
     }
 
+    /**
+     * @brief Creates a heart power-up entity at the given position.
+     *
+     * The heart grants the paddle a wide-paddle power-up when collected.
+     * It includes a position, sprite, collider, and a HeartPowerTag to identify its type.
+     *
+     * @param x Horizontal position on the screen.
+     * @param y Vertical position on the screen.
+     * @return The unique ID of the created heart entity.
+     */
     id_type CreateHeart(float x, float y) {
         bagel::Entity e = bagel::Entity::create();
 
