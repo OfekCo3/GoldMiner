@@ -56,7 +56,7 @@ void MovementSystem() {
 
         // Optional debug: warn if a brick has Velocity (should not happen)
         if (bagel::World::mask(ent).test(bagel::Component<BrickHealth>::Bit)) {
-            std::cout << "⚠️ Warning: Brick entity " << id << " has Velocity!\n";
+            std::cout << " Warning: Brick entity " << id << " has Velocity!\n";
         }
 
         auto& pos = bagel::World::getComponent<Position>(ent);
@@ -239,7 +239,7 @@ void CollisionSystem() {
                     bagel::ent_type paddle{pid};
                     if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
                         bagel::World::addComponent(paddle, breakout::PowerUpType{breakout::ePowerUpType::WIDE_PADDLE});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                        bagel::World::addComponent(paddle, breakout::TimedEffect{2.0f});
                         break;
                     }
                 }
@@ -355,8 +355,8 @@ void PowerUpSystem(float deltaTime) {
         // Wide paddle effect: widen only once
         if (power.powerUp == breakout::ePowerUpType::WIDE_PADDLE) {
             auto& col = World::getComponent<Collider>(ent);
-            if (col.width < 180.0f) {
-                col.width = 180.0f;
+            if (col.width < 500.0f) {
+
                 std::cout << "Paddle widened.\n";
             }
         }
@@ -613,6 +613,15 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
     };
 
 
+        /**
+     * @brief Renders all entities that have both Position and Sprite components.
+     *
+     * For paddles with PowerUpType::WIDE_PADDLE, the sprite is visually scaled wider and centered.
+     * Other sprites are drawn normally, with fixed scaling (0.7 or 0.4 for ball).
+     *
+     * @param ren The SDL renderer
+     * @param tex The texture containing all sprite graphics
+     */
     void RenderSystem(SDL_Renderer* ren, SDL_Texture* tex) {
         using namespace bagel;
 
@@ -622,25 +631,48 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
         for (id_type id = 0; id <= World::maxId().id; ++id) {
             ent_type ent{id};
-            if (World::mask(ent).test(required)) {
-                const auto& pos = World::getComponent<Position>(ent);
-                const auto& sprite = World::getComponent<Sprite>(ent);
+            if (!World::mask(ent).test(required)) continue;
 
-                SDL_FRect dst = {pos.x, pos.y, 40, 40};  // default
-                auto it = SPRITE_ATLAS.find(sprite.spriteID);
-                if (it != SPRITE_ATLAS.end()) {
-                    const SDL_FRect& src = it->second;
-                    dst.w = src.w * 0.7f;  // scale down width
-                    dst.h = src.h * 0.7f;  // scale down height
-                    if (sprite.spriteID == eSpriteID::BALL) {
-                        dst.w = src.w * 0.4f;  // scale down width
-                        dst.h = src.h * 0.4f;  // scale down height
+            const auto& pos = World::getComponent<Position>(ent);
+            const auto& sprite = World::getComponent<Sprite>(ent);
+
+            auto it = SPRITE_ATLAS.find(sprite.spriteID);
+            if (it == SPRITE_ATLAS.end()) continue;
+
+            const SDL_FRect& src = it->second;
+            float scale = 0.7f;
+            float scaledW = src.w * scale;
+            float scaledH = src.h * scale;
+            float drawX = pos.x;
+            float drawY = pos.y;
+
+            // Special scaling for the ball
+            if (sprite.spriteID == eSpriteID::BALL) {
+                scale = 0.4f;
+                scaledW = src.w * scale;
+                scaledH = src.h * scale;
+            }
+
+            // Special scaling for wide paddle (visual only)
+            if (World::mask(ent).test(Component<PaddleControl>::Bit)) {
+                if (World::mask(ent).test(Component<PowerUpType>::Bit)) {
+                    const auto& power = World::getComponent<PowerUpType>(ent);
+                    if (power.powerUp == breakout::ePowerUpType::WIDE_PADDLE) {
+                        scale = 1.5f; // or 2.0f depending how wide you want
+                        scaledW = src.w * scale;
+                        scaledH = src.h * 0.7f;
+
+                        // Center the paddle visually
+                        drawX = pos.x - (scaledW - src.w * 0.7f) / 2.0f;
                     }
-                    SDL_RenderTexture(ren, tex, &src, &dst);
                 }
             }
+
+            SDL_FRect dst = {drawX, drawY, scaledW, scaledH};
+            SDL_RenderTexture(ren, tex, &src, &dst);
         }
     }
+
 
     /**
  * @brief Creates a full grid of bricks arranged in rows and columns.
