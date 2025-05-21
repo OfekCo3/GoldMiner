@@ -35,7 +35,7 @@ namespace breakout {
     /** @brief Types of power-ups available in the game. */
     enum class ePowerUpType {
         NONE = 0,
-        SHOTING_LASER = 1,
+        SHOOTING_LASER = 1,
         WIDE_PADDLE = 2,
     };
 

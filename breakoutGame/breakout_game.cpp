@@ -255,7 +255,7 @@ namespace breakout {
                     for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
                         bagel::ent_type paddle{pid};
                         if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
-                            bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
+                            bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOOTING_LASER});
                             bagel::World::addComponent(paddle, breakout::TimedEffect{0.8f});
                             break;
                         }
@@ -277,7 +277,7 @@ namespace breakout {
                         bagel::ent_type paddle{pid};
                         if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
                             bagel::World::addComponent(paddle, breakout::PowerUpType{breakout::ePowerUpType::WIDE_PADDLE});
-                            bagel::World::addComponent(paddle, breakout::TimedEffect{2.0f});
+                            bagel::World::addComponent(paddle, breakout::TimedEffect{3.0f});
                             break;
                         }
                     }
@@ -390,7 +390,7 @@ namespace breakout {
   * - If time runs out:
   *   - Removes power-up components.
   *   - Resets paddle size if it had the WIDE_PADDLE effect.
-  * - If the power-up is SHOTING_LASER:
+  * - If the power-up is SHOOTING_LASER:
   *   - Fires two lasers periodically using a cooldown timer.
   * - If the power-up is WIDE_PADDLE:
   *   - Widens the paddle (once only).
@@ -445,7 +445,7 @@ namespace breakout {
             }
 
             // Laser power-up: fires two lasers every X seconds
-            if (power.powerUp == ePowerUpType::SHOTING_LASER) {
+            if (power.powerUp == ePowerUpType::SHOOTING_LASER) {
                 laserCooldown -= deltaTime;
                 if (laserCooldown <= 0.0f) {
                     const auto& pos = World::getComponent<Position>(ent);
@@ -546,7 +546,7 @@ namespace breakout {
         b2Circle circle = {0, 0, (87.0f * 0.4f / 2.0f) / 10.0f}; // radius in meters
         b2CreateCircleShape(body, &ballShapeDef, &circle);
 
-        b2Vec2 velocity = {6.0f, -10.0f};
+        b2Vec2 velocity = {7.0f, -10.0f};
         b2Body_SetLinearVelocity(body, velocity);
         b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
 
@@ -564,26 +564,8 @@ namespace breakout {
      */
     id_type CreateBrick(int health, eSpriteID color, float x, float y) {
         bagel::Entity e = bagel::Entity::create();
-
         Collider collider{171.0f * 0.7f, 59.0f * 0.7f};
-
-        // Box2D body
-        b2BodyDef def = b2DefaultBodyDef();
-        def.type = b2_staticBody;
-        def.position = {x / 10.0f, y / 10.0f};
-
-        b2BodyId body = b2CreateBody(boxWorld, &def);
-
-        b2ShapeDef shape = b2DefaultShapeDef();
-        shape.density = 1.0f;
-
-        b2Polygon box = b2MakeBox(collider.width / 2 / 10.0f, collider.height / 2 / 10.0f);
-        b2CreatePolygonShape(body, &shape, &box);
-
-        b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
-
-        e.addAll(Position{x, y}, Sprite{color}, collider, BrickHealth{health}, PhysicsBody{body});
-
+        e.addAll(Position{x,y}, Sprite{color}, collider, BrickHealth{health});
         return e.entity().id;
     }
 
@@ -844,11 +826,12 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
                 float y = startY + row * (brickH + spacingY);
                 eSpriteID color = static_cast<eSpriteID>(2 + (row % 4) * 2); // Choose color by row
 
-                // Place a static star in the middle of the top row
-                if (row == 2 && col == cols / 2) {
-                    CreateStar(x, y); // This star does not fall – no velocity
-                }else if (row == 3 && col == cols / 2) {
-                    CreateHeart(x,y);
+                // Place the star and the heart
+                if (row == 1 && col == 1) {
+                    CreateStar(x, y);
+                }
+                else if (row == 2 && col == cols - 2) {
+                    CreateHeart(x, y);
                 }
                 else {
                     CreateBrick(health, color, x, y);
@@ -925,7 +908,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
                 if (isColliding(pos, col, pPos, pCol)) {
                     std::cout << "Star hit paddle! Granting laser effect.\n";
-                    World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
+                    World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOOTING_LASER});
                     World::addComponent(paddle, breakout::TimedEffect{2.0f});
                     World::addComponent(star, breakout::DestroyedTag{});
                     break;
