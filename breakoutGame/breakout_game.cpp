@@ -100,38 +100,86 @@ void MovementSystem() {
     }
 }
 
-
-
-    bool isColliding(const Position& a, const Collider& ca, const Position& b, const Collider& cb) {
-        return (
+    eSpriteID getBrokenVersion(eSpriteID spriteID) {
+        switch (spriteID) {
+            case eSpriteID::BRICK_BLUE:
+                return eSpriteID::BRICK_BLUE_DMG;
+            case eSpriteID::BRICK_PURPLE:
+                return eSpriteID::BRICK_PURPLE_DMG;
+            case eSpriteID::BRICK_YELLOW:
+                return eSpriteID::BRICK_YELLOW_DMG;
+            case eSpriteID::BRICK_ORANGE:
+                return eSpriteID::BRICK_ORANGE_DMG;
+            default:
+                return spriteID;
+        }
+    }
+        bool isColliding(const Position& a, const Collider& ca, const Position& b, const Collider& cb) {
+            return (
                 a.x < b.x + cb.width &&
                 a.x + ca.width > b.x &&
                 a.y < b.y + cb.height &&
                 a.y + ca.height > b.y
-        );
-    }
+            );
+        }
 
     /**
  * @brief Detects and handles collisions between entities that have Position and Collider components.
  *        Handles ball vs. brick/paddle/floor/star, and laser vs. brick.
  */
-void CollisionSystem() {
-    bagel::Mask requiredMask;
-    requiredMask.set(bagel::Component<Position>::Bit);
-    requiredMask.set(bagel::Component<Collider>::Bit);
+    void CollisionSystem() {
+        bagel::Mask requiredMask;
+        requiredMask.set(bagel::Component<Position>::Bit);
+        requiredMask.set(bagel::Component<Collider>::Bit);
 
-    for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
-        bagel::ent_type e1{id1};
-        if (!bagel::World::mask(e1).test(requiredMask)) continue;
+        for (bagel::id_type id1 = 0; id1 <= bagel::World::maxId().id; ++id1) {
+            bagel::ent_type e1{id1};
+            if (!bagel::World::mask(e1).test(requiredMask)) continue;
 
-        // Handle laser-brick separately
-        if (bagel::World::mask(e1).test(bagel::Component<LaserTag>::Bit)) {
+            // Handle laser-brick
+            if (bagel::World::mask(e1).test(bagel::Component<LaserTag>::Bit)) {
+                for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
+                    if (id1 == id2) continue;
+
+                    bagel::ent_type e2{id2};
+                    if (!bagel::World::mask(e2).test(requiredMask)) continue;
+                    if (!bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) continue;
+                    if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
+
+                    auto& p1 = bagel::World::getComponent<Position>(e1);
+                    auto& c1 = bagel::World::getComponent<Collider>(e1);
+                    auto& p2 = bagel::World::getComponent<Position>(e2);
+                    auto& c2 = bagel::World::getComponent<Collider>(e2);
+
+                    if (!isColliding(p1, c1, p2, c2)) continue;
+
+                    std::cout << "Laser hit brick!\n";
+
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                    brick.hits--;
+                    if (brick.hits <= 0) {
+                        auto& sprite = bagel::World::getComponent<Sprite>(e2);
+                        sprite.spriteID = getBrokenVersion(sprite.spriteID);
+                        if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
+                            bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
+                        }
+                    }
+
+                    bagel::World::addComponent(e1, breakout::DestroyedTag{});
+                    break;
+                }
+
+                continue;
+            }
+
+            // === Ball collisions ===
+            if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
+
             for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
                 if (id1 == id2) continue;
 
                 bagel::ent_type e2{id2};
                 if (!bagel::World::mask(e2).test(requiredMask)) continue;
-                if (!bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) continue;
                 if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
 
                 auto& p1 = bagel::World::getComponent<Position>(e1);
@@ -141,173 +189,129 @@ void CollisionSystem() {
 
                 if (!isColliding(p1, c1, p2, c2)) continue;
 
-                std::cout << "Laser hit brick!\n";
+                // --- Ball hits Brick ---
+                if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
+                    auto& brick = bagel::World::getComponent<BrickHealth>(e2);
+                    brick.hits--;
 
-                auto& brick = bagel::World::getComponent<BrickHealth>(e2);
-                if (brick.hits <= 0) continue;
-                brick.hits--;
+                    std::cout << "Ball hit brick! Entity: " << e2.id
+                              << ", Remaining hits: " << brick.hits << "\n";
 
-                if (brick.hits <= 0) {
-                    auto& sprite = bagel::World::getComponent<Sprite>(e2);
-                    sprite.spriteID = static_cast<eSpriteID>(static_cast<int>(sprite.spriteID) + 1);
-
-                    if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
-                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
+                    if (brick.hits <= 0) {
+                        auto& sprite = bagel::World::getComponent<Sprite>(e2);
+                        sprite.spriteID = static_cast<eSpriteID>(static_cast<int>(sprite.spriteID) + 1);
+                        if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
+                            bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
+                        }
                     }
+
+                    // flip Y (Box2D)
+                    auto& phys = bagel::World::getComponent<PhysicsBody>(e1);
+                    b2Vec2 v = b2Body_GetLinearVelocity(phys.body);
+                    v.y *= -1;
+                    b2Body_SetLinearVelocity(phys.body, v);
+
+                    break;
                 }
 
-                break;
-            }
-
-            continue; // Done handling laser, skip rest
-        }
-
-        // === Ball collision starts here ===
-        if (!bagel::World::mask(e1).test(bagel::Component<BallTag>::Bit)) continue;
-
-        for (bagel::id_type id2 = 0; id2 <= bagel::World::maxId().id; ++id2) {
-            if (id1 == id2) continue;
-
-            bagel::ent_type e2{id2};
-            if (!bagel::World::mask(e2).test(requiredMask)) continue;
-            if (bagel::World::mask(e2).test(bagel::Component<DestroyedTag>::Bit)) continue;
-
-            auto& p1 = bagel::World::getComponent<Position>(e1);
-            auto& c1 = bagel::World::getComponent<Collider>(e1);
-            auto& p2 = bagel::World::getComponent<Position>(e2);
-            auto& c2 = bagel::World::getComponent<Collider>(e2);
-
-            if (!isColliding(p1, c1, p2, c2)) continue;
-
-            // --- Ball hits Brick ---
-            if (bagel::World::mask(e2).test(bagel::Component<BrickHealth>::Bit)) {
-                auto& brick = bagel::World::getComponent<BrickHealth>(e2);
-                if (brick.hits <= 0) continue;
-
-                std::cout << "Ball hit brick! Entity: " << e2.id
-                          << ", Remaining hits: " << brick.hits << "\n";
-
-                brick.hits--;
-
-                auto& vel = bagel::World::getComponent<Velocity>(e1);
-                vel.dy *= -1;
-
-                if (brick.hits <= 0) {
-                    auto& sprite = bagel::World::getComponent<Sprite>(e2);
-                    sprite.spriteID = static_cast<eSpriteID>(static_cast<int>(sprite.spriteID) + 1);
-
-                    if (!bagel::World::mask(e2).test(bagel::Component<BreakAnimation>::Bit)) {
-                        bagel::World::addComponent(e2, breakout::BreakAnimation{0.5f});
-                    }
+                // --- Ball hits Paddle ---
+                if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
+                    std::cout << "Ball hit paddle! Inverting Y velocity.\n";
+                    auto& phys = bagel::World::getComponent<PhysicsBody>(e1);
+                    b2Vec2 v = b2Body_GetLinearVelocity(phys.body);
+                    v.y = -std::abs(v.y);
+                    b2Body_SetLinearVelocity(phys.body, v);
+                    break;
                 }
 
-                break;
-            }
-
-            // --- Ball hits Paddle ---
-            if (bagel::World::mask(e2).test(bagel::Component<PaddleControl>::Bit)) {
-                std::cout << "Ball hit paddle! Inverting Y velocity.\n";
-                auto& vel = bagel::World::getComponent<Velocity>(e1);
-                vel.dy *= -1;
-                break;
-            }
-
-            // --- Ball hits Floor ---
-            if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
-                std::cout << "Ball hit the floor!\n";
-                if (!bagel::World::mask(e1).test(bagel::Component<DestroyedTag>::Bit)) {
+                // --- Ball hits Floor ---
+                if (bagel::World::mask(e2).test(bagel::Component<FloorTag>::Bit)) {
+                    std::cout << "Ball hit the floor!\n";
                     bagel::World::addComponent(e1, breakout::DestroyedTag{});
+                    break;
                 }
-                break;
-            }
 
-            // --- Ball hits Star ---
-            if (bagel::World::mask(e2).test(bagel::Component<StarPowerTag>::Bit)) {
-                std::cout << "Ball hit star! Paddle gains laser power.\n";
+                // --- Ball hits Star ---
+                if (bagel::World::mask(e2).test(bagel::Component<StarPowerTag>::Bit)) {
+                    std::cout << "Ball hit star! Paddle gains laser power.\n";
 
-                for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
-                    bagel::ent_type paddle{pid};
-                    if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
-                        bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{0.8f});
-                        break;
+                    for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
+                        bagel::ent_type paddle{pid};
+                        if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
+                            bagel::World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOTING_LASER});
+                            bagel::World::addComponent(paddle, breakout::TimedEffect{0.8f});
+                            break;
+                        }
                     }
+
+                    bagel::World::addComponent(e2, breakout::DestroyedTag{});
+                    auto& phys = bagel::World::getComponent<PhysicsBody>(e1);
+                    b2Vec2 v = b2Body_GetLinearVelocity(phys.body);
+                    v.y *= -1;
+                    b2Body_SetLinearVelocity(phys.body, v);
+                    break;
                 }
 
-                bagel::World::addComponent(e2, breakout::DestroyedTag{});
+                // --- Ball hits Heart ---
+                if (bagel::World::mask(e2).test(bagel::Component<HeartPowerTag>::Bit)) {
+                    std::cout << "Ball hit heart! Paddle becomes wider.\n";
 
-                auto& vel = bagel::World::getComponent<Velocity>(e1);
-                vel.dy *= -1;
-                break;
-            }
-            // --- Ball hits Heart ---
-            if (bagel::World::mask(e2).test(bagel::Component<HeartPowerTag>::Bit)) {
-                std::cout << "Ball hit heart! Paddle becomes wider.\n";
-
-                for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
-                    bagel::ent_type paddle{pid};
-                    if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
-                        bagel::World::addComponent(paddle, breakout::PowerUpType{breakout::ePowerUpType::WIDE_PADDLE});
-                        bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
-                        break;
+                    for (bagel::id_type pid = 0; pid <= bagel::World::maxId().id; ++pid) {
+                        bagel::ent_type paddle{pid};
+                        if (bagel::World::mask(paddle).test(bagel::Component<PaddleControl>::Bit)) {
+                            bagel::World::addComponent(paddle, breakout::PowerUpType{breakout::ePowerUpType::WIDE_PADDLE});
+                            bagel::World::addComponent(paddle, breakout::TimedEffect{5.0f});
+                            break;
+                        }
                     }
+
+                    bagel::World::addComponent(e2, breakout::DestroyedTag{});
+                    auto& phys = bagel::World::getComponent<PhysicsBody>(e1);
+                    b2Vec2 v = b2Body_GetLinearVelocity(phys.body);
+                    v.y *= -1;
+                    b2Body_SetLinearVelocity(phys.body, v);
+                    break;
                 }
-
-                bagel::World::addComponent(e2, breakout::DestroyedTag{});
-
-                auto& vel = bagel::World::getComponent<Velocity>(e1);
-                vel.dy *= -1;
-                break;
             }
-
         }
     }
-}
+
 
     /**
      * @brief Reads player input and updates paddle position accordingly.
      */
     void PlayerControlSystem() {
         constexpr float SCREEN_WIDTH = 800.0f;
-        constexpr float PADDLE_WIDTH = 161.0f * 0.7f;
-        constexpr float MAX_SPEED = 20.0f;
+        constexpr float MAX_SPEED = 6.0f; // adjust as needed
 
         bagel::Mask mask;
         mask.set(bagel::Component<PaddleControl>::Bit);
-        mask.set(bagel::Component<PhysicsBody>::Bit);
+        mask.set(bagel::Component<Position>::Bit);
         mask.set(bagel::Component<Collider>::Bit);
 
         SDL_PumpEvents();
         const bool* keys = SDL_GetKeyboardState(nullptr);
 
-        for (id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
             bagel::ent_type ent{id};
             if (!bagel::World::mask(ent).test(mask)) continue;
 
             const auto& control = bagel::World::getComponent<PaddleControl>(ent);
-            auto& phys = bagel::World::getComponent<PhysicsBody>(ent);
-            auto& col = bagel::World::getComponent<Collider>(ent);
-
-            if (!b2Body_IsValid(phys.body)) continue;
+            auto& pos = bagel::World::getComponent<Position>(ent);
+            const auto& col = bagel::World::getComponent<Collider>(ent);
 
             float vx = 0.0f;
             if (keys[control.keyLeft])  vx -= MAX_SPEED;
             if (keys[control.keyRight]) vx += MAX_SPEED;
 
-            b2Vec2 pos = b2Body_GetPosition(phys.body);
-            float halfWidth = col.width / 2.0f / 10.0f;
-            float minX = halfWidth;
-            float maxX = (SCREEN_WIDTH / 10.0f) - halfWidth;
+            pos.x += vx;
 
-            if ((pos.x <= minX && vx < 0) || (pos.x >= maxX && vx > 0)) {
-                vx = 0.0f;
-            }
-
-            b2Vec2 newVel = {vx, 0.0f};
-            b2Body_SetLinearVelocity(phys.body, newVel);
+            // Clamp to screen bounds
+            if (pos.x < 0) pos.x = 0;
+            if (pos.x + col.width > SCREEN_WIDTH)
+                pos.x = SCREEN_WIDTH - col.width;
         }
     }
-
     /**
     * @brief For each entity with PhysicsBody + Position, sync the position from Box2D.
     */
@@ -435,6 +439,13 @@ void PowerUpSystem(float deltaTime) {
         for (auto ent : toDestroy) {
             std::cout << "Destroying entity (manual bit clear): " << ent.id << "\n";
 
+            if (bagel::World::mask(ent).test(bagel::Component<PhysicsBody>::Bit)) {
+                auto& phys = bagel::World::getComponent<PhysicsBody>(ent);
+                if (b2Body_IsValid(phys.body)) {
+                    b2DestroyBody(phys.body);
+                }
+            }
+
             // Get non-const reference to the actual mask
             bagel::Mask& mask = bagel::World::maskMutable(ent);
 
@@ -492,12 +503,12 @@ void PowerUpSystem(float deltaTime) {
         ballShapeDef.enableSensorEvents = true;
         ballShapeDef.density = 1;
         ballShapeDef.material.friction = 0;
-        ballShapeDef.material.restitution = 1.1f;
+        ballShapeDef.material.restitution = 1.0f; // the ball became too quick
 
         b2Circle circle = {0, 0, (87.0f * 0.4f / 2.0f) / 10.0f}; // radius in meters
         b2CreateCircleShape(body, &ballShapeDef, &circle);
 
-        b2Vec2 velocity = {10.0f, -15.0f};
+        b2Vec2 velocity = {6.0f, -10.0f};
         b2Body_SetLinearVelocity(body, velocity);
         b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
 
@@ -548,32 +559,20 @@ void PowerUpSystem(float deltaTime) {
      * @param right Key code (SDL_Scancode) for moving right
      * @return Unique entity ID
      */
-    id_type CreatePaddle(int left, int right) {
-        bagel::Entity e = bagel::Entity::create();
-        Position pos{320.0f, 560.0f};
-        Sprite sprite{eSpriteID::PADDLE};
-        Collider collider{161.0f * 0.7f, 55.0f * 0.7f};
-        PaddleControl control{left, right};
+     id_type CreatePaddle(int leftKey, int rightKey) {
+         bagel::Entity e = bagel::Entity::create();
 
-         // Box2D body
-         b2BodyDef def = b2DefaultBodyDef();
-         def.type = b2_kinematicBody;
-         def.position = {pos.x / 10.0f, pos.y / 10.0f};
+         float paddleWidth = 161.0f * 0.7f;
+         float paddleHeight = 55.0f * 0.7f;
 
-         b2BodyId body = b2CreateBody(boxWorld, &def);
+         Position pos{320.0f, 560.0f};
+         Sprite sprite{eSpriteID::PADDLE};
+         Collider collider{paddleWidth, paddleHeight};
+         PaddleControl control{leftKey, rightKey};
 
-         b2ShapeDef shape = b2DefaultShapeDef();
-         shape.density = 1.0f;
-
-         b2Polygon box = b2MakeBox(collider.width / 2 / 10.0f, collider.height / 2 / 10.0f);
-         b2CreatePolygonShape(body, &shape, &box);
-
-         b2Body_SetUserData(body, new bagel::ent_type{e.entity()});
-
-         e.addAll(pos, sprite, collider, control, PhysicsBody{body});
-        return e.entity().id;
-
-    }
+         e.addAll(pos, sprite, collider, control);
+         return e.entity().id;
+     }
 
     /**
      * @brief Creates a falling power-up with a defined type and timed effect.
@@ -606,17 +605,53 @@ void PowerUpSystem(float deltaTime) {
         return e.entity().id;
     }
 
-   /**
- * @brief Main game loop for the Breakout ECS-style game.
- *
- * Initializes all core entities (UI, paddle, ball, bricks),
- * runs input, system updates, and rendering each frame.
- * After 5 seconds, a star power-up is spawned that grants laser-shooting
- * ability if collected by the paddle.
- *
- * @param ren SDL renderer for drawing.
- * @param tex Texture sheet for all game sprites.
- */
+    /**
+    * @brief Creates the walls - only Box2d not entities.
+     */
+    void CreateWalls() {
+        constexpr float screenW = 800.0f;
+        constexpr float screenH = 600.0f;
+        constexpr float scale = 10.0f;
+
+        b2BodyDef bodyDef = b2DefaultBodyDef();
+        bodyDef.type = b2_staticBody;
+
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        shapeDef.density = 1.0f;
+
+        // Top wall
+        bodyDef.position = {screenW / 2.0f / 10.0f, -1.0f}; // y = -10px
+        b2BodyId top = b2CreateBody(boxWorld, &bodyDef);
+        b2Polygon topBox = b2MakeBox(screenW / 2.0f / 10.0f, 1.0f);
+        b2CreatePolygonShape(top, &shapeDef, &topBox);
+
+        // Left wall
+        bodyDef.position = {-1.0f, screenH / 2.0f / 10.0f};
+        b2BodyId left = b2CreateBody(boxWorld, &bodyDef);
+        b2Polygon leftBox = b2MakeBox(1.0f, screenH / 2.0f / 10.0f);
+        b2CreatePolygonShape(left, &shapeDef, &leftBox);
+
+        // Right wall
+        float halfWallW = 1.0f;
+        float wallX = (screenW / scale) - halfWallW;
+        bodyDef.position = {wallX, screenH / 2.0f / scale};
+        b2BodyId right = b2CreateBody(boxWorld, &bodyDef);
+        b2Polygon rightBox = b2MakeBox(halfWallW, screenH / 2.0f / scale);
+        b2CreatePolygonShape(right, &shapeDef, &rightBox);
+    }
+
+
+    /**
+  * @brief Main game loop for the Breakout ECS-style game.
+  *
+  * Initializes all core entities (UI, paddle, ball, bricks),
+  * runs input, system updates, and rendering each frame.
+  * After 5 seconds, a star power-up is spawned that grants laser-shooting
+  * ability if collected by the paddle.
+  *
+  * @param ren SDL renderer for drawing.
+  * @param tex Texture sheet for all game sprites.
+  */
 /**
  * @brief Main game loop for the Breakout ECS-style game.
  *
@@ -636,7 +671,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
     // === Initialization ===
     PrepareBoxWorld();
-
+    CreateWalls();
     CreateUIManager();
     CreatePaddle(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
     CreateBall();
@@ -686,10 +721,9 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
 
         BreakAnimationSystem(deltaTime); // Animate broken bricks
         PowerUpSystem(deltaTime);        // Handle laser timer and shooting
+        PowerUpSystem(deltaTime);        // Handle laser timer and shooting
         PhysicsSystem(deltaTime);
         DestroySystem();                 // Remove entities with DestroyedTag
-
-
     }
 }
 
@@ -723,7 +757,7 @@ void run(SDL_Renderer* ren, SDL_Texture* tex) {
             if (World::mask(ent).test(required)) {
                 const auto& pos = World::getComponent<Position>(ent);
                 const auto& sprite = World::getComponent<Sprite>(ent);
-
+                
                 SDL_FRect dst = {pos.x, pos.y, 40, 40};  // default
                 auto it = SPRITE_ATLAS.find(sprite.spriteID);
                 if (it != SPRITE_ATLAS.end()) {
