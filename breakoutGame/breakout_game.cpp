@@ -160,6 +160,32 @@ namespace breakout {
     //----------------------------------
 
     /**
+    * @brief Handles timing of break animations and destroys the entity when the animation is complete.
+    *
+    * Any entity with a BreakAnimation component will have its timer incremented each frame.
+    * Once the timer exceeds 0.555 seconds, the entity is marked for destruction (if not already).
+    *
+    * @param deltaTime Time since last frame (in seconds)
+    */
+    void BreakAnimationSystem(float deltaTime) {
+        bagel::Mask breakMask;
+        breakMask.set(bagel::Component<BreakAnimation>::Bit);
+
+        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+            bagel::ent_type entity{id};
+            if (!bagel::World::mask(entity).test(breakMask)) continue;
+            if (bagel::World::mask(entity).test(bagel::Component<DestroyedTag>::Bit)) continue;
+
+            auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
+            anim.timer += deltaTime;
+
+            if (anim.timer >= 0.555f) {
+                bagel::World::addComponent(entity, breakout::DestroyedTag{});
+            }
+        }
+    }
+
+    /**
      * @brief Updates positions of entities that have both Position and Velocity components.
      *
      * This system moves all entities based on their Velocity and handles collision with
@@ -781,6 +807,50 @@ namespace breakout {
         b2CreatePolygonShape(right, &shapeDef, &rightBox);
     }
 
+    id_type CreateStar(float x, float y) {
+        bagel::Entity e = bagel::Entity::create();
+
+        Position pos{x, y};
+        Sprite sprite{eSpriteID::STAR};
+        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
+
+        e.addAll(pos, sprite, collider, StarPowerTag{});
+        return e.entity().id;
+    }
+
+    id_type CreateHeart(float x, float y) {
+        bagel::Entity e = bagel::Entity::create();
+
+        Position pos{x, y};
+        Sprite sprite{eSpriteID::HEART};
+        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
+
+        e.addAll(pos, sprite, collider, HeartPowerTag{});
+        return e.entity().id;
+    }
+
+    /**
+     * @brief Creates a laser entity that moves upward and destroys bricks on contact.
+     *
+     * The laser moves slowly (dy = -100) to visually match a "weaker" power-up effect.
+     *
+     * @param x Horizontal position where the laser is spawned.
+     * @param y Vertical position where the laser is spawned.
+     * @return The unique ID of the created laser entity.
+     */
+    id_type CreateLaser(float x, float y) {
+        bagel::Entity e = bagel::Entity::create();
+
+        Position pos{x, y};
+        Velocity vel{0.0f, -200.0f}; // slower upward movement
+        Sprite sprite{eSpriteID::LASER};
+        Collider collider{11.0f, 22.0f}; // exact sprite size
+        LaserTag tag;
+
+        e.addAll(pos, vel, sprite, collider, tag);
+        return e.entity().id;
+    }
+
     //----------------------------------
     /// @section Game Loop
     //----------------------------------
@@ -853,141 +923,4 @@ namespace breakout {
             DestroySystem();                 // Remove entities with DestroyedTag
         }
     }
-
-
-
-    /**
- * @brief Handles timing of break animations and destroys the entity when the animation is complete.
- *
- * Any entity with a BreakAnimation component will have its timer incremented each frame.
- * Once the timer exceeds 0.555 seconds, the entity is marked for destruction (if not already).
- *
- * @param deltaTime Time since last frame (in seconds)
- */
-    void BreakAnimationSystem(float deltaTime) {
-        bagel::Mask breakMask;
-        breakMask.set(bagel::Component<BreakAnimation>::Bit);
-
-        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
-            bagel::ent_type entity{id};
-            if (!bagel::World::mask(entity).test(breakMask)) continue;
-            if (bagel::World::mask(entity).test(bagel::Component<DestroyedTag>::Bit)) continue;
-
-            auto& anim = bagel::World::getComponent<BreakAnimation>(entity);
-            anim.timer += deltaTime;
-
-            if (anim.timer >= 0.555f) {
-                bagel::World::addComponent(entity, breakout::DestroyedTag{});
-            }
-        }
-    }
-
-
-    void StarSystem(float deltaTime) {
-        using namespace bagel;
-
-        Mask required;
-        required.set(Component<Position>::Bit);
-        required.set(Component<Velocity>::Bit);
-        required.set(Component<Collider>::Bit);
-        required.set(Component<StarPowerTag>::Bit);
-
-        Mask paddleMask;
-        paddleMask.set(Component<Position>::Bit);
-        paddleMask.set(Component<Collider>::Bit);
-        paddleMask.set(Component<PaddleControl>::Bit);
-
-        Mask floorMask;
-        floorMask.set(Component<Position>::Bit);
-        floorMask.set(Component<Collider>::Bit);
-        floorMask.set(Component<FloorTag>::Bit);
-
-        for (id_type starID = 0; starID <= World::maxId().id; ++starID) {
-            ent_type star{starID};
-            if (!World::mask(star).test(required)) continue;
-
-            auto& pos = World::getComponent<Position>(star);
-            auto& vel = World::getComponent<Velocity>(star);
-            auto& col = World::getComponent<Collider>(star);
-
-            // Move star
-            pos.y += vel.dy * deltaTime;
-
-            // Check collision with paddle
-            for (id_type pid = 0; pid <= World::maxId().id; ++pid) {
-                ent_type paddle{pid};
-                if (!World::mask(paddle).test(paddleMask)) continue;
-
-                auto& pPos = World::getComponent<Position>(paddle);
-                auto& pCol = World::getComponent<Collider>(paddle);
-
-                if (isColliding(pos, col, pPos, pCol)) {
-                    std::cout << "Star hit paddle! Granting laser effect.\n";
-                    World::addComponent(paddle, breakout::PowerUpType{ePowerUpType::SHOOTING_LASER});
-                    World::addComponent(paddle, breakout::TimedEffect{2.0f});
-                    World::addComponent(star, breakout::DestroyedTag{});
-                    break;
-                }
-            }
-
-            // Check collision with floor
-            for (id_type fid = 0; fid <= World::maxId().id; ++fid) {
-                ent_type floor{fid};
-                if (!World::mask(floor).test(floorMask)) continue;
-
-                auto& fPos = World::getComponent<Position>(floor);
-                auto& fCol = World::getComponent<Collider>(floor);
-
-                if (isColliding(pos, col, fPos, fCol)) {
-                    std::cout << "Star hit floor! Removing.\n";
-                    World::addComponent(star, breakout::DestroyedTag{});
-                    break;
-                }
-            }
-        }
-   }
-
-    id_type CreateStar(float x, float y) {
-        bagel::Entity e = bagel::Entity::create();
-
-        Position pos{x, y};
-        Sprite sprite{eSpriteID::STAR};
-        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
-
-        e.addAll(pos, sprite, collider, StarPowerTag{});
-        return e.entity().id;
-    }
-
-    id_type CreateHeart(float x, float y) {
-        bagel::Entity e = bagel::Entity::create();
-
-        Position pos{x, y};
-        Sprite sprite{eSpriteID::HEART};
-        Collider collider{84.0f * 0.7f, 73.0f * 0.7f};
-
-        e.addAll(pos, sprite, collider, HeartPowerTag{});
-        return e.entity().id;
-    }
-    /**
- * @brief Creates a laser entity that moves upward and destroys bricks on contact.
- *
- * The laser moves slowly (dy = -100) to visually match a "weaker" power-up effect.
- *
- * @param x Horizontal position where the laser is spawned.
- * @param y Vertical position where the laser is spawned.
- * @return The unique ID of the created laser entity.
- */
-    id_type CreateLaser(float x, float y) {
-        bagel::Entity e = bagel::Entity::create();
-
-        Position pos{x, y};
-        Velocity vel{0.0f, -200.0f}; // slower upward movement
-        Sprite sprite{eSpriteID::LASER};
-        Collider collider{11.0f, 22.0f}; // exact sprite size
-        LaserTag tag;
-
-        e.addAll(pos, vel, sprite, collider, tag);
-        return e.entity().id;
-    }
-
 } //namespace breakout;
