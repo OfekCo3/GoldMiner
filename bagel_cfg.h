@@ -1,26 +1,35 @@
-
 #pragma once
-#include "breakoutGame//breakout_game.h"
+#include "goldMiner/gold_miner_ecs.h"
 
-
-constexpr Bagel Params{
-	.DynamicResize = true
+constexpr bagel::Bagel Params{
+        .DynamicResize = true
 };
 
-BAGEL_STORAGE(breakout::Position, PackedStorage)
-BAGEL_STORAGE(breakout::Velocity, PackedStorage)
-BAGEL_STORAGE(breakout::Collider, PackedStorage)
-BAGEL_STORAGE(breakout::PaddleControl, PackedStorage)
-BAGEL_STORAGE(breakout::PowerUpType, PackedStorage)
-BAGEL_STORAGE(breakout::TimedEffect, PackedStorage)
-BAGEL_STORAGE(breakout::BallTag, TaggedStorage)
-BAGEL_STORAGE(breakout::DestroyedTag, TaggedStorage)
-BAGEL_STORAGE(breakout::FloorTag, TaggedStorage)
-BAGEL_STORAGE(breakout::Sprite, SparseStorage)
-BAGEL_STORAGE(breakout::BrickHealth, SparseStorage)
-BAGEL_STORAGE(breakout::LaserTag, TaggedStorage)
-BAGEL_STORAGE(breakout::StarPowerTag, TaggedStorage)
-BAGEL_STORAGE(breakout::PhysicsBody, SparseStorage)
+// Packed
+    BAGEL_STORAGE(goldminer::Position, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Velocity, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Renderable, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::PlayerInfo, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Score, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::UIComponent, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Value, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Weight, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::MoleAI, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::LifeTime, bagel::PackedStorage)
 
+// Sparse
+    BAGEL_STORAGE(goldminer::Rotation, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::Length, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::RopeControl, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::ItemType, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::GameTimer, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::PlayerInput, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::SoundEffect, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::Health, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::Name, bagel::SparseStorage)
 
-
+// Tagged
+    BAGEL_STORAGE(goldminer::Collectable, bagel::TaggedStorage)
+    BAGEL_STORAGE(goldminer::RoperTag, bagel::TaggedStorage)
+    BAGEL_STORAGE(goldminer::Collidable, bagel::TaggedStorage)
+    BAGEL_STORAGE(goldminer::GameOverTag, bagel::TaggedStorage)

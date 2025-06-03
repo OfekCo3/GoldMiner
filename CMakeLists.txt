@@ -9,10 +9,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 add_executable(BAGEL
         bagel.h
         bagel_cfg.h
-        breakoutGame/breakout_game.cpp
-        breakoutGame/breakout_game.h
         main.cpp
-)
+        goldMiner/gold_miner_ecs.cpp goldMiner/gold_miner_ecs.h)
 
 set(SDL_STATIC ON)
 set(SDL_SHARED OFF)
