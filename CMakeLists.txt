@@ -10,25 +10,36 @@ add_executable(BAGEL
         bagel.h
         bagel_cfg.h
         main.cpp
-        goldMiner/gold_miner_ecs.cpp goldMiner/gold_miner_ecs.h)
+        goldMiner/gold_miner_ecs.cpp goldMiner/gold_miner_ecs.h
+        goldMiner/sprite_manager.cpp goldMiner/sprite_manager.h
+)
+
+add_executable(TEST_GOLDMINER_VISUAL
+        bagel.h
+        bagel_cfg.h
+        main_visual.cpp
+        goldMiner/gold_miner_ecs.cpp goldMiner/gold_miner_ecs.h
+        goldMiner/sprite_manager.cpp goldMiner/sprite_manager.h
+)
 
 set(SDL_STATIC ON)
 set(SDL_SHARED OFF)
 add_subdirectory(lib/SDL)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3-static)
-
-set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(lib/SDL_image)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3_image-static)
-
-set(BOX2D_SAMPLES OFF)
-set(BOX2D_BENCHMARKS OFF)
-set(BOX2D_DOCS OFF)
-set(BOX2D_PROFILE OFF)
-set(BOX2D_VALIDATE OFF)
-set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory(lib/box2d)
-target_link_libraries(${PROJECT_NAME} PUBLIC box2d)
+
+target_link_libraries(BAGEL PUBLIC SDL3-static SDL3_image-static box2d)
+target_link_libraries(TEST_GOLDMINER_VISUAL PUBLIC SDL3-static SDL3_image-static box2d)
+
+target_include_directories(BAGEL PUBLIC
+        ${PROJECT_SOURCE_DIR}/lib/SDL/include
+        ${PROJECT_SOURCE_DIR}/lib/SDL_image/include
+)
+
+target_include_directories(TEST_GOLDMINER_VISUAL PUBLIC
+        ${PROJECT_SOURCE_DIR}/lib/SDL/include
+        ${PROJECT_SOURCE_DIR}/lib/SDL_image/include
+)
 
 add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD

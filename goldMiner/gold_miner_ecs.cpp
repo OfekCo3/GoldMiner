@@ -4,6 +4,10 @@
  */
 #include "gold_miner_ecs.h"
 #include "../bagel.h"
+#include "sprite_manager.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_render.h>
+
 #include <iostream>
 
 namespace goldminer {
@@ -25,7 +29,7 @@ namespace goldminer {
  */
     id_type CreatePlayer(int playerID) {
         Entity e = Entity::create();
-        e.addAll(Position{100.0f, 550.0f}, Velocity{}, Renderable{0}, PlayerInfo{playerID}, Score{0}, PlayerInput{});
+        e.addAll(Position{100.0f, 550.0f}, Velocity{}, Renderable{SPRITE_PLAYER_IDLE}, PlayerInfo{playerID}, Score{0}, PlayerInput{});
         return e.entity().id;
     }
 
@@ -45,7 +49,7 @@ namespace goldminer {
  */
     id_type CreateGold(float x, float y) {
         Entity e = Entity::create();
-        e.addAll(Position{x, y}, Renderable{1}, Collectable{}, ItemType{ItemType::Type::Gold}, Value{100}, Weight{1.0f}, Collidable{}, PlayerInfo{-1});
+        e.addAll(Position{x, y}, Renderable{SPRITE_GOLD}, Collectable{}, ItemType{ItemType::Type::Gold}, Value{100}, Weight{1.0f}, Collidable{}, PlayerInfo{-1});
         return e.entity().id;
     }
 
@@ -54,7 +58,7 @@ namespace goldminer {
  */
     id_type CreateRock(float x, float y) {
         Entity e = Entity::create();
-        e.addAll(Position{x, y}, Renderable{2}, Collectable{}, ItemType{ItemType::Type::Rock}, Value{10}, Weight{3.0f}, Collidable{}, PlayerInfo{-1});
+        e.addAll(Position{x, y}, Renderable{SPRITE_ROCK}, Collectable{}, ItemType{ItemType::Type::Rock}, Value{10}, Weight{3.0f}, Collidable{}, PlayerInfo{-1});
         return e.entity().id;
     }
 
@@ -63,7 +67,7 @@ namespace goldminer {
  */
     id_type CreateDiamond(float x, float y) {
         Entity e = Entity::create();
-        e.addAll(Position{x, y}, Renderable{3}, Collectable{}, ItemType{ItemType::Type::Diamond}, Value{300}, Weight{0.5f}, Collidable{}, PlayerInfo{-1});
+        e.addAll(Position{x, y}, Renderable{SPRITE_DIAMOND}, Collectable{}, ItemType{ItemType::Type::Diamond}, Value{300}, Weight{0.5f}, Collidable{}, PlayerInfo{-1});
         return e.entity().id;
     }
 
@@ -72,7 +76,7 @@ namespace goldminer {
  */
     id_type CreateMysteryBag(float x, float y) {
         Entity e = Entity::create();
-        e.addAll(Position{x, y}, Renderable{4}, Collectable{}, ItemType{ItemType::Type::MysteryBag}, Value{0}, Weight{1.0f}, Collidable{}, PlayerInfo{-1});
+        e.addAll(Position{x, y}, Renderable{SPRITE_MYSTERY_BAG}, Collectable{}, ItemType{ItemType::Type::MysteryBag}, Value{0}, Weight{1.0f}, Collidable{}, PlayerInfo{-1});
         return e.entity().id;
     }
 
@@ -99,7 +103,7 @@ namespace goldminer {
  */
     id_type CreateMole(float x, float y) {
         Entity e = Entity::create();
-        e.addAll(Position{x, y}, Velocity{1.5f, 0.0f}, Renderable{5}, MoleAI{100.0f, true}, Collidable{});
+        e.addAll(Position{x, y}, Velocity{1.5f, 0.0f}, Renderable{5}, Mole{100.0f, true}, Collidable{});
         return e.entity().id;
     }
 
@@ -235,7 +239,10 @@ namespace goldminer {
 /**
  * @brief Renders all entities with a position and sprite.
  */
-    void RenderSystem() {
+    void RenderSystem(SDL_Renderer* renderer) {
+        using namespace bagel;
+        using namespace goldminer;
+
         Mask mask;
         mask.set(Component<Renderable>::Bit);
         mask.set(Component<Position>::Bit);
@@ -243,7 +250,30 @@ namespace goldminer {
         for (id_type id = 0; id <= World::maxId().id; ++id) {
             ent_type ent{id};
             if (!World::mask(ent).test(mask)) continue;
-            // No logic implemented yet
+
+            const Position& pos = World::getComponent<Position>(ent);
+            const Renderable& render = World::getComponent<Renderable>(ent);
+
+            if (render.spriteID < 0 || render.spriteID >= SPRITE_COUNT) continue;
+
+            SDL_Rect rect = GetSpriteSrcRect(static_cast<SpriteID>(render.spriteID));
+            SDL_Texture* texture = GetSpriteTexture(static_cast<SpriteID>(render.spriteID));
+
+            SDL_FRect src = {
+                static_cast<float>(rect.x),
+                static_cast<float>(rect.y),
+                static_cast<float>(rect.w),
+                static_cast<float>(rect.h)
+            };
+
+            SDL_FRect dest = {
+                pos.x,
+                pos.y,
+                src.w,
+                src.h
+            };
+
+            SDL_RenderTexture(renderer, texture, &src, &dest);
         }
     }
 

@@ -14,7 +14,7 @@ constexpr bagel::Bagel Params{
     BAGEL_STORAGE(goldminer::UIComponent, bagel::PackedStorage)
     BAGEL_STORAGE(goldminer::Value, bagel::PackedStorage)
     BAGEL_STORAGE(goldminer::Weight, bagel::PackedStorage)
-    BAGEL_STORAGE(goldminer::MoleAI, bagel::PackedStorage)
+    BAGEL_STORAGE(goldminer::Mole, bagel::PackedStorage)
     BAGEL_STORAGE(goldminer::LifeTime, bagel::PackedStorage)
 
 // Sparse
