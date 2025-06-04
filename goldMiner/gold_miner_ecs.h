@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <string>
+#include <SDL3/SDL.h>
 
 namespace goldminer {
 
@@ -120,7 +121,7 @@ namespace goldminer {
     void PullObjectSystem();
     void ScoreSystem();
     void MysteryBagSystem();
-    void RenderSystem();
+    void RenderSystem(SDL_Renderer* renderer);
     void TimerSystem();
     void UISystem();
     void MoleSystem();
@@ -141,5 +142,24 @@ namespace goldminer {
     id_type CreateMole(float x, float y);
 
 } // namespace goldminer
+
+enum SpriteID {
+    SPRITE_GOLD = 0,
+    SPRITE_ROCK,
+    SPRITE_DIAMOND,
+    SPRITE_MYSTERY_BAG,
+    SPRITE_BOMB,
+    SPRITE_PLAYER_IDLE,
+    SPRITE_PLAYER_PULL1,
+    SPRITE_PLAYER_PULL2,
+    SPRITE_TREASURE_CHEST,
+    SPRITE_TITLE_MONEY,
+    SPRITE_TITLE_TIME,
+    SPRITE_TIMER,
+    SPRITE_BACKGROUND,
+
+
+    SPRITE_COUNT
+};
 
 #endif // GOLD_MINER_ECS_H
