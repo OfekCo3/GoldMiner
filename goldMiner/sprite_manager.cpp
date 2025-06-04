@@ -8,7 +8,9 @@ static std::array<SDL_Rect, SPRITE_COUNT> gSrcRects;
 
 SDL_Texture* LoadTexture(SDL_Renderer* renderer, const char* path) {
     SDL_Texture* tex = IMG_LoadTexture(renderer, path);
-    if (!tex) std::cerr << "Failed to load: " << path << " SDL_Error: " << SDL_GetError() << "\n";
+    if (!tex) {
+        std::cerr << "Failed to load: " << path << "\nSDL_GetError: " << SDL_GetError() << "\n";
+    }
     return tex;
 }
 
