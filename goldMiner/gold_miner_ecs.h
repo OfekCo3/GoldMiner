@@ -86,7 +86,7 @@ namespace goldminer {
         int hp = 1;
     };
 
-    struct MoleAI {
+    struct Mole {
         float speed = 100.0f;
         bool movingRight = true;
     };
@@ -123,9 +123,7 @@ namespace goldminer {
     void RenderSystem();
     void TimerSystem();
     void UISystem();
-    void AnimationSystem();
-    void SoundSystem();
-    void MoleAISystem();
+    void MoleSystem();
     void LifeTimeSystem();
 
 //----------------------------------
