@@ -280,39 +280,11 @@ namespace goldminer {
     }
 
 /**
- * @brief Updates frame-based animations.
- */
-    void AnimationSystem() {
-        Mask mask;
-        mask.set(Component<Renderable>::Bit); // or future AnimationComponent
-
-        for (id_type id = 0; id <= World::maxId().id; ++id) {
-            ent_type ent{id};
-            if (!World::mask(ent).test(mask)) continue;
-            // No logic implemented yet
-        }
-    }
-
-/**
- * @brief Plays sound effects.
- */
-    void SoundSystem() {
-        Mask mask;
-        mask.set(Component<SoundEffect>::Bit);
-
-        for (id_type id = 0; id <= World::maxId().id; ++id) {
-            ent_type ent{id};
-            if (!World::mask(ent).test(mask)) continue;
-            // No logic implemented yet
-        }
-    }
-
-/**
  * @brief Controls the mole's horizontal movement.
  */
-    void MoleAISystem() {
+    void MoleSystem() {
         Mask mask;
-        mask.set(Component<MoleAI>::Bit);
+        mask.set(Component<Mole>::Bit);
         mask.set(Component<Position>::Bit);
         mask.set(Component<Velocity>::Bit);
 
