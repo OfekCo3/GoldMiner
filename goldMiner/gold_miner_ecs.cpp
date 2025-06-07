@@ -35,13 +35,74 @@ namespace goldminer {
     }
 
 /**
- * @brief Creates the rope entity for a given player.
- * @param playerID The identifier of the player who owns the rope.
- * @return The ID of the created entity.
+ * @brief Creates a dynamic rope entity with a narrow rectangle body for collision testing.
+ *
+ * This version of the rope includes a Box2D dynamic body, allowing it to interact
+ * with static objects such as gold, rocks, and treasure chests. The shape is a
+ * narrow vertical rectangle (thin rope), with collision enabled.
+ *
+ * Components added:
+ * - Position: top-left (for rendering)
+ * - Rotation: (optional for future use)
+ * - Length: logical rope length
+ * - RopeControl, RoperTag: identify as rope
+ * - Collidable: enables collision system
+ * - PhysicsBody: Box2D body handle
+ * - PlayerInfo: for multi-player logic
+ *
+ * @param playerID The rope's owning player
+ * @return Entity ID
  */
     id_type CreateRope(int playerID) {
         Entity e = Entity::create();
-        e.addAll(Position{120.0f, 540.0f}, Rotation{0.0f}, Length{0.0f}, RopeControl{}, RoperTag{}, PlayerInfo{playerID}, Collidable{});
+
+        // Visual size in pixels
+        float ropeW = 6.0f;
+        float ropeH = 120.0f;
+
+        float startX = 120.0f;
+        float startY = 540.0f;
+
+        constexpr float PPM = 50.0f;
+
+        float centerX = startX + ropeW / 2.0f;
+        float centerY = startY + ropeH / 2.0f;
+
+        float hw = ropeW / 2.0f / PPM;
+        float hh = ropeH / 2.0f / PPM;
+
+        // Create dynamic Box2D body
+        b2BodyDef bodyDef = b2DefaultBodyDef();
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.position = {centerX / PPM, centerY / PPM};
+
+        b2BodyId bodyId = b2CreateBody(gWorld, &bodyDef);
+
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        shapeDef.density = 1.0f;
+        shapeDef.material.friction = 0.5f;
+
+        b2Polygon box = {};
+        box.count = 4;
+        box.vertices[0] = { -hw, -hh };
+        box.vertices[1] = {  hw, -hh };
+        box.vertices[2] = {  hw,  hh };
+        box.vertices[3] = { -hw,  hh };
+
+        b2CreatePolygonShape(bodyId, &shapeDef, &box);
+        b2Body_SetUserData(bodyId, new bagel::ent_type{e.entity()});
+
+        e.addAll(
+                Position{startX, startY},
+                Rotation{0.0f},
+                Length{ropeH},
+                RopeControl{},
+                RoperTag{},
+                PlayerInfo{playerID},
+                Collidable{},
+                PhysicsBody{bodyId}
+        );
+
         return e.entity().id;
     }
 
@@ -488,23 +549,41 @@ namespace goldminer {
     }
 
 /**
- * @brief Detects collisions between rope and collectable items.
+ * @brief Detects collisions between the rope and collectible items.
+ *
+ * This system finds collisions between entities marked with RoperTag
+ * (the rope) and entities that have ItemType and are collectable.
+ * If a collision is detected, it prints the rope and item entity IDs.
+ *
+ * Requirements:
+ * - Rope: PhysicsBody, Collidable, RoperTag
+ * - Item: PhysicsBody, Collidable, ItemType
  */
     void CollisionSystem() {
-        Mask mask;
-        mask.set(Component<Position>::Bit);
-        mask.set(Component<Collidable>::Bit);
+        b2ContactEvents events = b2World_GetContactEvents(gWorld);
 
-        Mask optional;
-        optional.set(Component<RoperTag>::Bit);
-        optional.set(Component<Collectable>::Bit);
-        optional.set(Component<ItemType>::Bit);
-        optional.set(Component<PlayerInfo>::Bit);
+        for (int i = 0; i < events.beginCount; ++i) {
+            b2ContactBeginTouchEvent contact = events.beginEvents[i];
 
-        for (id_type id = 0; id <= World::maxId().id; ++id) {
-            ent_type ent{id};
-            if (!World::mask(ent).test(mask)) continue;
-            // No logic implemented yet
+            b2ShapeId a = contact.shapeIdA;
+            b2ShapeId b = contact.shapeIdB;
+
+            b2BodyId bodyA = b2Shape_GetBody(a);
+            b2BodyId bodyB = b2Shape_GetBody(b);
+
+            auto *entA = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyA));
+            auto *entB = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyB));
+
+            if (!entA || !entB) continue;
+
+            bool aIsRope = bagel::World::mask(*entA).test(bagel::Component<RoperTag>::Bit);
+            bool bIsRope = bagel::World::mask(*entB).test(bagel::Component<RoperTag>::Bit);
+            bool aIsItem = bagel::World::mask(*entA).test(bagel::Component<ItemType>::Bit);
+            bool bIsItem = bagel::World::mask(*entB).test(bagel::Component<ItemType>::Bit);
+
+            if ((aIsRope && bIsItem) || (bIsRope && aIsItem)) {
+                std::cout << "Collision: Rope hit item!" << std::endl;
+            }
         }
     }
 
