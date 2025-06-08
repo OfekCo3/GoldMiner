@@ -12,12 +12,17 @@
 
 namespace goldminer {
     b2WorldId gWorld = b2_nullWorldId;
+
     using namespace bagel;
 
-//----------------------------------
-/// @section Entity Creation Functions
-//----------------------------------
-//----------------------------------
+    void initBox2DWorld () {
+        b2WorldDef worldDef = b2DefaultWorldDef();
+        worldDef.gravity = { 0.0f, 9.8f };
+        gWorld = b2CreateWorld(&worldDef);
+        b2World_SetHitEventThreshold(gWorld, 0.1f);
+
+    }
+
 
 //----------------------------------
 /// @section Entity Creation Functions
@@ -60,8 +65,8 @@ namespace goldminer {
         float ropeW = 6.0f;
         float ropeH = 120.0f;
 
-        float startX = 120.0f;
-        float startY = 540.0f;
+        float startX = 620.0f;
+        float startY = 100.0f;
 
         constexpr float PPM = 50.0f;
 
@@ -77,10 +82,20 @@ namespace goldminer {
         bodyDef.position = {centerX / PPM, centerY / PPM};
 
         b2BodyId bodyId = b2CreateBody(gWorld, &bodyDef);
+        b2Body_EnableHitEvents(bodyId, true);
+        b2Vec2 velocity = {0.0f, 2.0f}; // Negative Y = upward
+        b2Body_SetLinearVelocity(bodyId, velocity);
+
 
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.5f;
+        shapeDef.material.restitution = 0.1f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
+
+        shapeDef.isSensor = true;
+        shapeDef.enableHitEvents = true;
 
         b2Polygon box = {};
         box.count = 4;
@@ -135,6 +150,8 @@ namespace goldminer {
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.3f;
         shapeDef.material.restitution = 0.1f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
 
         b2Circle circle;
         circle.center = {0.0f, 0.0f};
@@ -205,6 +222,9 @@ namespace goldminer {
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.6f;
         shapeDef.material.restitution = 0.1f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
+
 
         // Six-point polygon approximating the rock's shape
         b2Vec2 verts[6] = {
@@ -279,11 +299,16 @@ namespace goldminer {
         bodyDef.position = {centerX / PPM, centerY / PPM};
 
         b2BodyId bodyId = b2CreateBody(gWorld, &bodyDef);
-
+        b2Body_EnableHitEvents(bodyId, true);
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.4f;
         shapeDef.material.restitution = 0.2f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
+
+        shapeDef.isSensor = true;
+        shapeDef.enableHitEvents = true;
 
         // Six-point diamond shape
         b2Vec2 verts[6] = {
@@ -370,6 +395,8 @@ namespace goldminer {
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.5f;
         shapeDef.material.restitution = 0.1f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
 
         // Six-point polygon representing the chest outline (scaled)
         b2Vec2 verts[6] = {
@@ -434,6 +461,8 @@ namespace goldminer {
         shapeDef.density = 1.0f;
         shapeDef.material.friction = 0.4f;
         shapeDef.material.restitution = 0.2f;
+        shapeDef.filter.categoryBits = 0x0001;
+        shapeDef.filter.maskBits = 0xFFFF;
 
         // Five-point polygon that mimics the mystery sack
         b2Vec2 verts[5] = {
@@ -549,45 +578,106 @@ namespace goldminer {
     }
 
 /**
- * @brief Detects collisions between the rope and collectible items.
+ * @brief Detects and handles hit events between entities using Box2D's Hit system.
  *
- * This system finds collisions between entities marked with RoperTag
- * (the rope) and entities that have ItemType and are collectable.
- * If a collision is detected, it prints the rope and item entity IDs.
+ * This system listens to Box2D's hit events to identify when the rope
+ * hits any item like diamond, gold, rock, etc. It uses user data to identify the ECS entities.
  *
- * Requirements:
- * - Rope: PhysicsBody, Collidable, RoperTag
- * - Item: PhysicsBody, Collidable, ItemType
+ * Prerequisite: You must enable hit events on the relevant bodies using b2Body_EnableHitEvents().
  */
     void CollisionSystem() {
+        std::cout << "\n[CollisionSystem] Checking Box2D hit events...\n";
+
+        if (!b2World_IsValid(gWorld)){
+            std::cerr << "[CollisionSystem] gWorld is null!\n";
+            return;
+        }
+
         b2ContactEvents events = b2World_GetContactEvents(gWorld);
+        std::cout << "[CollisionSystem] hitCount = " << events.hitCount << "\n";
 
-        for (int i = 0; i < events.beginCount; ++i) {
-            b2ContactBeginTouchEvent contact = events.beginEvents[i];
+        if (events.hitCount == 0) {
+            std::cout << "No hits detected by Box2D this frame.\n";
+        }
 
-            b2ShapeId a = contact.shapeIdA;
-            b2ShapeId b = contact.shapeIdB;
+        for (int i = 0; i < events.hitCount; ++i) {
+            const b2ContactHitEvent &hit = events.hitEvents[i];
 
-            b2BodyId bodyA = b2Shape_GetBody(a);
-            b2BodyId bodyB = b2Shape_GetBody(b);
+            b2ShapeId shapeA = hit.shapeIdA;
+            b2ShapeId shapeB = hit.shapeIdB;
 
-            auto *entA = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyA));
-            auto *entB = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyB));
+            b2BodyId bodyA = b2Shape_GetBody(shapeA);
+            b2BodyId bodyB = b2Shape_GetBody(shapeB);
 
-            if (!entA || !entB) continue;
+            auto *userDataA = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyA));
+            auto *userDataB = static_cast<bagel::ent_type *>(b2Body_GetUserData(bodyB));
 
-            bool aIsRope = bagel::World::mask(*entA).test(bagel::Component<RoperTag>::Bit);
-            bool bIsRope = bagel::World::mask(*entB).test(bagel::Component<RoperTag>::Bit);
-            bool aIsItem = bagel::World::mask(*entA).test(bagel::Component<ItemType>::Bit);
-            bool bIsItem = bagel::World::mask(*entB).test(bagel::Component<ItemType>::Bit);
+            if (!userDataA || !userDataB) {
+                std::cout << "One of the entities has no user data.\n";
+                continue;
+            }
 
-            if ((aIsRope && bIsItem) || (bIsRope && aIsItem)) {
-                std::cout << "Collision: Rope hit item!" << std::endl;
+            bagel::ent_type entA = *userDataA;
+            bagel::ent_type entB = *userDataB;
+
+            std::cout << "Hit detected between Entity " << entA.id << " and Entity " << entB.id << std::endl;
+
+            if (bagel::World::mask(entA).test(bagel::Component<Collectable>::Bit)) {
+                std::cout << "Collectable A got hit!\n";
+            }
+            if (bagel::World::mask(entB).test(bagel::Component<Collectable>::Bit)) {
+                std::cout << "Collectable B got hit!\n";
             }
         }
     }
 
-/**
+    /**
+ * @brief Debug system to detect collisions approximately by comparing positions.
+ *
+ * This system is useful when Box2D contact events are not working as expected.
+ * It checks for overlapping rectangles (AABB) between entities that have
+ * Position and Collidable components.
+ *
+ * It logs rope vs item collisions if their positions intersect.
+ */
+    void DebugCollisionSystem() {
+
+        for (id_type a = 0; a <= World::maxId().id; ++a) {
+            ent_type entA{a};
+            if (!World::mask(entA).test(Component<Position>::Bit)) continue;
+            if (!World::mask(entA).test(Component<Collidable>::Bit)) continue;
+
+            const Position& posA = World::getComponent<Position>(entA);
+
+            for (id_type b = a + 1; b <= World::maxId().id; ++b) {
+                ent_type entB{b};
+                if (!World::mask(entB).test(Component<Position>::Bit)) continue;
+                if (!World::mask(entB).test(Component<Collidable>::Bit)) continue;
+
+                const Position& posB = World::getComponent<Position>(entB);
+
+                float sizeA = 20.0f;
+                float sizeB = 20.0f;
+                SDL_FRect rectA = {posA.x, posA.y, sizeA, sizeA};
+                SDL_FRect rectB = {posB.x, posB.y, sizeB, sizeB};
+
+                if (SDL_HasRectIntersectionFloat(&rectA, &rectB)) {
+                    std::cout << "[DEBUG] Approximate collision: " << a << " vs " << b << std::endl;
+
+                    bool aIsRope = World::mask(entA).test(Component<RoperTag>::Bit);
+                    bool bIsItem = World::mask(entB).test(Component<ItemType>::Bit);
+                    bool bIsRope = World::mask(entB).test(Component<RoperTag>::Bit);
+                    bool aIsItem = World::mask(entA).test(Component<ItemType>::Bit);
+
+                    if ((aIsRope && bIsItem) || (bIsRope && aIsItem)) {
+                        std::cout << "Rope touched item! (by position)" << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
  * @brief Pulls collected items towards the player.
  */
     void PullObjectSystem() {
@@ -683,7 +773,103 @@ namespace goldminer {
         }
     }
 
+    /**
+ * @brief Draws rope lines for all rope entities.
+ *
+ * This system draws a black line between each rope and its associated player,
+ * visually representing the rope without using textures or Renderable components.
+ *
+ * The line starts at the center of the player's sprite and ends at the rope's position.
+ * It is useful for debugging or as a simple visual before adding full sprite animation.
+ *
+ * Requirements:
+ * - Rope entity must have: RoperTag, Position, PlayerInfo.
+ * - Player entity must have: Position, PlayerInfo (matching the rope).
+ *
+ * @param renderer The SDL renderer used for drawing.
+ */
 /**
+ * @brief Draws rope lines for all rope entities using their Box2D position.
+ *
+ * This system draws a black line between the player's center and the Box2D body
+ * of the rope. It avoids relying on the Position component, which may be offset
+ * for sprite rendering purposes.
+ *
+ * Requirements:
+ * - Rope entity must have: RoperTag, PhysicsBody, PlayerInfo.
+ * - Player entity must have: Position, PlayerInfo.
+ *
+ * @param renderer The SDL renderer used for drawing.
+ */
+    void RopeRenderSystem(SDL_Renderer* renderer) {
+        using namespace bagel;
+        using namespace goldminer;
+
+        constexpr float PPM = 50.0f;
+
+        Mask ropeMask;
+        ropeMask.set(Component<RoperTag>::Bit);
+        ropeMask.set(Component<PhysicsBody>::Bit);
+        ropeMask.set(Component<PlayerInfo>::Bit);
+
+        Mask playerMask;
+        playerMask.set(Component<Position>::Bit);
+        playerMask.set(Component<PlayerInfo>::Bit);
+
+        for (bagel::id_type id = 0; id <= bagel::World::maxId().id; ++id) {
+            bagel::ent_type ent{id};
+
+            if (bagel::World::mask(ent).test(bagel::Component<goldminer::RoperTag>::Bit) &&
+                bagel::World::mask(ent).test(bagel::Component<goldminer::PhysicsBody>::Bit)) {
+                const auto& phys = bagel::World::getComponent<goldminer::PhysicsBody>(ent);
+                b2Transform tf = b2Body_GetTransform(phys.bodyId);
+                std::cout << "ROPE at: " << tf.p.x * 50 << ", " << tf.p.y * 50 << std::endl;
+            }
+
+            if (bagel::World::mask(ent).test(bagel::Component<goldminer::ItemType>::Bit) &&
+                bagel::World::mask(ent).test(bagel::Component<goldminer::PhysicsBody>::Bit)) {
+                const auto& phys = bagel::World::getComponent<goldminer::PhysicsBody>(ent);
+                b2Transform tf = b2Body_GetTransform(phys.bodyId);
+                std::cout << "ITEM at: " << tf.p.x * 50 << ", " << tf.p.y * 50 << std::endl;
+            }
+        }
+
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type rope{id};
+            if (!World::mask(rope).test(ropeMask)) continue;
+
+            const PhysicsBody& phys = World::getComponent<PhysicsBody>(rope);
+            const PlayerInfo& ropeOwner = World::getComponent<PlayerInfo>(rope);
+
+            if (!b2Body_IsValid(phys.bodyId)) continue;
+
+            b2Transform tf = b2Body_GetTransform(phys.bodyId);
+            SDL_FPoint ropeTip = {
+                    tf.p.x * PPM,
+                    tf.p.y * PPM
+            };
+
+            // Find the matching player
+            for (id_type pid = 0; pid <= World::maxId().id; ++pid) {
+                ent_type player{pid};
+                if (!World::mask(player).test(playerMask)) continue;
+
+                const PlayerInfo& playerInfo = World::getComponent<PlayerInfo>(player);
+                if (playerInfo.playerID != ropeOwner.playerID) continue;
+
+                const Position& playerPos = World::getComponent<Position>(player);
+
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderLine(renderer,
+                               playerPos.x + 80, playerPos.y + 80,  // Approx. center of player
+                               ropeTip.x, ropeTip.y);               // From Box2D rope center
+
+                break;
+            }
+        }
+    }
+
+    /**
  * @brief Returns the visual center offset of a sprite based on its ID.
  *
  * Given a sprite ID, this function retrieves its source rectangle and computes

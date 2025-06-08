@@ -26,14 +26,9 @@ int main() {
         return 1;
     }
 
+    goldminer::initBox2DWorld();
     // Load sprite textures from "res" folder
     LoadAllSprites(renderer);
-
-    // Create the Box2D world with zero gravity (for top-down style)
-    b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = {0.0f, 0.0f};
-    goldminer::gWorld = b2CreateWorld(&worldDef);
-
     // Create some initial entities
     goldminer::CreatePlayer(1);
     goldminer::CreateRope(1);
@@ -60,6 +55,8 @@ int main() {
         b2World_Step(goldminer::gWorld, timeStep, velocityIterations);
 
         goldminer::PhysicsSyncSystem();
+        goldminer::CollisionSystem();
+        goldminer::DebugCollisionSystem();
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -70,6 +67,8 @@ int main() {
 
         // Render ECS entities
         goldminer::RenderSystem(renderer);
+        goldminer::RopeRenderSystem(renderer);
+
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16); // Approximate 60 FPS

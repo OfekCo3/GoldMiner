@@ -119,7 +119,7 @@ namespace goldminer {
 //----------------------------------
 /// @section System Declarations
 //----------------------------------
-
+    void initBox2DWorld();
     void PlayerInputSystem();
     void RopeSwingSystem();
     void RopeExtensionSystem();
@@ -133,6 +133,8 @@ namespace goldminer {
     void MoleSystem();
     void LifeTimeSystem();
     void PhysicsSyncSystem();
+    void DebugCollisionSystem();
+    void RopeRenderSystem(SDL_Renderer* renderer);
 
 //----------------------------------
 /// @section Entity Creation
