@@ -112,8 +112,8 @@ namespace goldminer {
     struct Collidable {};
 
     struct PlayerInput {
-        bool sendRope = false;
-        bool retractRope = false;
+        bool shootPressed = false;
+        bool escapePressed = false;
     };
 
 //----------------------------------

@@ -471,7 +471,13 @@ namespace goldminer {
 /**
  * @brief Reads player input and stores it in PlayerInput component.
  */
-    void PlayerInputSystem() {
+    void PlayerInputSystem(const SDL_Event& event) {
+        using namespace bagel;
+
+        if (event.type != SDL_EVENT_KEY_DOWN) return;
+
+        SDL_Scancode scancode = event.key.scancode;
+
         Mask mask;
         mask.set(Component<PlayerInfo>::Bit);
         mask.set(Component<PlayerInput>::Bit);
@@ -479,11 +485,26 @@ namespace goldminer {
         for (id_type id = 0; id <= World::maxId().id; ++id) {
             ent_type ent{id};
             if (!World::mask(ent).test(mask)) continue;
-            // No logic implemented yet
+
+            auto& input = World::getComponent<PlayerInput>(ent);
+
+            // Reset input flags (optional, depends on your design):
+            input.shootPressed = false;
+            input.escapePressed = false;
+
+            if (scancode == SDL_SCANCODE_SPACE) {
+                input.shootPressed = true;
+                std::cout << "[PlayerInputSystem] SPACE pressed — shoot rope!\n";
+            }
+
+            if (scancode == SDL_SCANCODE_ESCAPE) {
+                input.escapePressed = true;
+                std::cout << "[PlayerInputSystem] ESCAPE pressed — quit game!\n";
+            }
         }
     }
 
-/**
+    /**
  * @brief Oscillates rope entities that are currently at rest.
  */
     void RopeSwingSystem() {
