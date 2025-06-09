@@ -33,3 +33,4 @@ constexpr bagel::Bagel Params{
     BAGEL_STORAGE(goldminer::RoperTag, bagel::TaggedStorage)
     BAGEL_STORAGE(goldminer::Collidable, bagel::TaggedStorage)
     BAGEL_STORAGE(goldminer::GameOverTag, bagel::TaggedStorage)
+

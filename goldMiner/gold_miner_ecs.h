@@ -96,6 +96,8 @@ namespace goldminer {
         float remaining = 1.5f;
     };
 
+
+
 //----------------------------------
 /// @section Tags
 //----------------------------------
