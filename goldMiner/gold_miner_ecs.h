@@ -54,7 +54,7 @@ namespace goldminer {
     };
 
     struct ItemType {
-        enum class Type { Gold, Rock, Diamond, TreasureChest, MysteryBag  } type = Type::Gold;
+        enum class Type { Gold, Rock, Diamond, TreasureChest  } type = Type::Gold;
     };
 
     struct Value {

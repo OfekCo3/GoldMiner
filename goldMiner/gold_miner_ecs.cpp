@@ -7,6 +7,8 @@
 #include "sprite_manager.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
+#include <cstdlib>  // for rand(), srand()
+#include <ctime>
 
 #include <iostream>
 
@@ -416,14 +418,15 @@ namespace goldminer {
 
         b2CreatePolygonShape(bodyId, &shapeDef, &shape);
         b2Body_SetUserData(bodyId, new bagel::ent_type{e.entity()});
-
+        srand(time(0));
+        int amount= rand()%100;
         // Final position stored already scaled
         e.addAll(
                 Position{x, y},
                 Renderable{SPRITE_TREASURE_CHEST},
                 Collectable{},
                 ItemType{ItemType::Type::TreasureChest},
-                Value{0},
+                Value{amount},
                 Weight{1.0f},
                 Collidable{},
                 PlayerInfo{-1},
@@ -434,68 +437,6 @@ namespace goldminer {
     }
 
 
-    /**
- * @brief Creates a mystery bag item at the given coordinates.
- */
-    id_type CreateMysteryBag(float x, float y) {
-        Entity e = Entity::create();
-
-        SDL_Rect rect = GetSpriteSrcRect(SPRITE_MYSTERY_BAG);
-        float width = static_cast<float>(rect.w);
-        float height = static_cast<float>(rect.h);
-
-        float centerX = x + width / 2.0f;
-        float centerY = y + height / 2.0f;
-
-        constexpr float PPM = 50.0f;
-        float hw = width / 2.0f / PPM;
-        float hh = height / 2.0f / PPM;
-
-        b2BodyDef bodyDef = b2DefaultBodyDef();
-        bodyDef.type = b2_staticBody;
-        bodyDef.position = {centerX / PPM, centerY / PPM};
-
-        b2BodyId bodyId = b2CreateBody(gWorld, &bodyDef);
-
-        b2ShapeDef shapeDef = b2DefaultShapeDef();
-        shapeDef.density = 1.0f;
-        shapeDef.material.friction = 0.4f;
-        shapeDef.material.restitution = 0.2f;
-        shapeDef.filter.categoryBits = 0x0001;
-        shapeDef.filter.maskBits = 0xFFFF;
-
-        // Five-point polygon that mimics the mystery sack
-        b2Vec2 verts[5] = {
-                { 0.0f, -hh * 0.9f },    // top (tie)
-                { -hw * 0.8f, -hh * 0.3f }, // upper left
-                { -hw, hh * 0.6f },        // bottom left
-                { hw, hh * 0.6f },         // bottom right
-                { hw * 0.8f, -hh * 0.3f }  // upper right
-        };
-
-        b2Polygon sackShape = {};
-        sackShape.count = 5;
-        for (int i = 0; i < 5; ++i) {
-            sackShape.vertices[i] = verts[i];
-        }
-
-        b2CreatePolygonShape(bodyId, &shapeDef, &sackShape);
-        b2Body_SetUserData(bodyId, new bagel::ent_type{e.entity()});
-
-        e.addAll(
-                Position{x, y},
-                Renderable{SPRITE_MYSTERY_BAG},
-                Collectable{},
-                ItemType{ItemType::Type::MysteryBag},
-                Value{0},
-                Weight{1.0f},
-                Collidable{},
-                PlayerInfo{-1},
-                PhysicsBody{bodyId}
-        );
-
-        return e.entity().id;
-    }
 
 /**
  * @brief Creates the game timer entity.
@@ -514,7 +455,6 @@ namespace goldminer {
         e.addAll(UIComponent{0}, PlayerInfo{playerID});
         return e.entity().id;
     }
-
 /**
  * @brief Creates a mole entity at the given position.
  */
