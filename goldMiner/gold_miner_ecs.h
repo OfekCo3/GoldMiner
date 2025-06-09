@@ -12,9 +12,11 @@
 #include <cstdint>
 #include <string>
 #include <SDL3/SDL.h>
+#include <box2d/box2d.h>
 
 namespace goldminer {
-
+    // Global Box2D world for physics (preview API)
+    extern b2WorldId gWorld;
     using id_type = int;
 
 //----------------------------------
@@ -52,7 +54,7 @@ namespace goldminer {
     };
 
     struct ItemType {
-        enum class Type { Gold, Rock, Diamond, MysteryBag } type = Type::Gold;
+        enum class Type { Gold, Rock, Diamond, TreasureChest, MysteryBag  } type = Type::Gold;
     };
 
     struct Value {
@@ -96,6 +98,10 @@ namespace goldminer {
         float remaining = 1.5f;
     };
 
+    struct PhysicsBody {
+        b2BodyId bodyId;
+    };
+
 //----------------------------------
 /// @section Tags
 //----------------------------------
@@ -113,19 +119,22 @@ namespace goldminer {
 //----------------------------------
 /// @section System Declarations
 //----------------------------------
-
+    void initBox2DWorld();
     void PlayerInputSystem();
     void RopeSwingSystem();
     void RopeExtensionSystem();
     void CollisionSystem();
     void PullObjectSystem();
     void ScoreSystem();
-    void MysteryBagSystem();
+    void TreasureChestSystem();
     void RenderSystem(SDL_Renderer* renderer);
     void TimerSystem();
     void UISystem();
     void MoleSystem();
     void LifeTimeSystem();
+    void PhysicsSyncSystem();
+    void DebugCollisionSystem();
+    void RopeRenderSystem(SDL_Renderer* renderer);
 
 //----------------------------------
 /// @section Entity Creation
@@ -137,6 +146,7 @@ namespace goldminer {
     id_type CreateRock(float x, float y);
     id_type CreateDiamond(float x, float y);
     id_type CreateMysteryBag(float x, float y);
+    id_type CreateTreasureChest(float x, float y);
     id_type CreateTimer();
     id_type CreateUIEntity(int playerID);
     id_type CreateMole(float x, float y);
@@ -147,12 +157,12 @@ enum SpriteID {
     SPRITE_GOLD = 0,
     SPRITE_ROCK,
     SPRITE_DIAMOND,
+    SPRITE_TREASURE_CHEST,
     SPRITE_MYSTERY_BAG,
     SPRITE_BOMB,
     SPRITE_PLAYER_IDLE,
     SPRITE_PLAYER_PULL1,
     SPRITE_PLAYER_PULL2,
-    SPRITE_TREASURE_CHEST,
     SPRITE_TITLE_MONEY,
     SPRITE_TITLE_TIME,
     SPRITE_TIMER,

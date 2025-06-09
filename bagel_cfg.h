@@ -27,6 +27,7 @@ constexpr bagel::Bagel Params{
     BAGEL_STORAGE(goldminer::SoundEffect, bagel::SparseStorage)
     BAGEL_STORAGE(goldminer::Health, bagel::SparseStorage)
     BAGEL_STORAGE(goldminer::Name, bagel::SparseStorage)
+    BAGEL_STORAGE(goldminer::PhysicsBody, bagel::SparseStorage)
 
 // Tagged
     BAGEL_STORAGE(goldminer::Collectable, bagel::TaggedStorage)
